@@ -35,3 +35,6 @@ true;
 
 (load("lisp/tests/test-cancel.lisp"), true);
 true;
+
+(load("lisp/tests/test-api.lisp"), true);
+true;
