@@ -32,3 +32,6 @@ true;
 
 (load("lisp/tests/test-mime-bundle.lisp"), true);
 true;
+
+(load("lisp/tests/test-cancel.lisp"), true);
+true;

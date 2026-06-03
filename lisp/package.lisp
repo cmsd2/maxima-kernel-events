@@ -23,8 +23,16 @@
     #:json-escape-string
     ;; Lifecycle queries (host-side)
     #:current-eval-id
-    #:cancel-requested-p
+    ;; Cancellation
     #:request-cancel
+    #:cancel-requested-p
+    #:check-cancel
+    #:reset-cancel-flag
+    #:cancellation-requested
+    #:cancellation-view-id
+    #:start-cancel-watcher
+    #:stop-cancel-watcher
+    #:cancel-watcher-running-p
     ;; Capability negotiation
     #:set-render-mimes
     #:render-mimes
