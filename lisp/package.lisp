@@ -28,6 +28,15 @@
     ;; Capability negotiation
     #:set-render-mimes
     #:render-mimes
+    #:add-render-mime
+    #:should-render-mime-p
+    ;; Mime bundles
+    #:make-mime-bundle
+    #:mime-bundle-add
+    #:mime-bundle-get
+    #:mime-bundle-mimes
+    #:mime-bundle-empty-p
+    #:build-mime-bundle
     ;; Streaming envelopes
     #:next-view-id
     #:next-view-seq

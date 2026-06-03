@@ -1,9 +1,34 @@
 /* Tests for kernel-events. */
-/* Real coverage lives in lisp/tests; each Lisp test runs at load */
-/* time and signals on failure (see lisp/tests/runner.lisp). */
+/* Each Lisp test file is loaded as its own rtest pair: a passing */
+/* load is a passing test, and a failing assertion inside any file */
+/* surfaces at that specific (load(...), true); pair. */
 
 (load("kernel-events"), true);
 true;
 
-(load("lisp/tests/runner.lisp"), load("lisp/tests/all.lisp"), true);
+(load("lisp/tests/runner.lisp"), true);
+true;
+
+(load("lisp/tests/test-sink.lisp"), true);
+true;
+
+(load("lisp/tests/test-json-scalars.lisp"), true);
+true;
+
+(load("lisp/tests/test-json-strings.lisp"), true);
+true;
+
+(load("lisp/tests/test-json-collections.lisp"), true);
+true;
+
+(load("lisp/tests/test-envelope-shapes.lisp"), true);
+true;
+
+(load("lisp/tests/test-emit.lisp"), true);
+true;
+
+(load("lisp/tests/test-stream-events.lisp"), true);
+true;
+
+(load("lisp/tests/test-mime-bundle.lisp"), true);
 true;
