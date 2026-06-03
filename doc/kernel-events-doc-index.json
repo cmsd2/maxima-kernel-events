@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "package": "kernel-events",
+  "source": "./doc/kernel-events.md",
+  "symbols": {
+    "alloc_view": {
+      "type": "Function",
+      "signature": "alloc_view(@var{kind})",
+      "summary": "Allocate a new view-id and emit the corresponding stream_begin envelope. Returns the view-id as a Maxima string. @var{kind} is a renderer-side dispatch key (e.g. @code{ode_trajectory}, @code{table_append}, @code{mcmc_chain}).",
+      "body_md": "Allocate a new view-id and emit the corresponding `stream_begin`\nenvelope. Returns the view-id as a Maxima string. @var{kind} is a\nrenderer-side dispatch key (e.g. @code{ode_trajectory},\n@code{table_append}, @code{mcmc_chain}).",
+      "examples": [],
+      "see_also": [],
+      "section": "Definitions for kernel-events"
+    },
+    "emit_display": {
+      "type": "Function",
+      "signature": "emit_display(@var{pairs})",
+      "summary": "Emit a display event with an explicit mime bundle. @var{pairs} is a Maxima list of [mime, payload] pairs. Used by libraries that know exactly what mime types they are producing (e.g. ax-plots emitting application/x-maxima-plotly).",
+      "body_md": "Emit a `display` event with an explicit mime bundle. @var{pairs} is\na Maxima list of `[mime, payload]` pairs. Used by libraries that know\nexactly what mime types they are producing (e.g. `ax-plots` emitting\n`application/x-maxima-plotly`).\n\n```\nemit_display([\n  [\"application/x-maxima-plotly\", json_string],\n  [\"text/plain\", \"<plot>\"]\n])$\n```",
+      "examples": [
+        {
+          "input": "emit_display([\n  [\"application/x-maxima-plotly\", json_string],\n  [\"text/plain\", \"<plot>\"]\n])$",
+          "output": ""
+        }
+      ],
+      "see_also": [],
+      "section": "Definitions for kernel-events"
+    },
+    "emit_done": {
+      "type": "Function",
+      "signature": "emit_done(@var{view_id}[, @var{status}])",
+      "summary": "Close a streaming view. @var{status} is one of the symbols @code{complete} (default), @code{cancelled}, @code{error}.",
+      "body_md": "Close a streaming view. @var{status} is one of the symbols\n@code{complete} (default), @code{cancelled}, @code{error}.",
+      "examples": [],
+      "see_also": [],
+      "section": "Definitions for kernel-events"
+    },
+    "emit_frame": {
+      "type": "Function",
+      "signature": "emit_frame(@var{view_id}, @var{payload})",
+      "summary": "Emit a frame envelope to a streaming view. @var{payload} shape is per-view-kind (e.g. [t, y] for an ODE trajectory).",
+      "body_md": "Emit a `frame` envelope to a streaming view. @var{payload} shape is\nper-view-kind (e.g. `[t, y]` for an ODE trajectory).",
+      "examples": [],
+      "see_also": [],
+      "section": "Definitions for kernel-events"
+    },
+    "emit_log": {
+      "type": "Function",
+      "signature": "emit_log(@var{view_id}, @var{level}, @var{message})",
+      "summary": "Emit a log envelope attached to a view. @var{level} is one of the symbols @code{info}, @code{warn}, @code{error}.",
+      "body_md": "Emit a `log` envelope attached to a view. @var{level} is one of the\nsymbols @code{info}, @code{warn}, @code{error}.",
+      "examples": [],
+      "see_also": [],
+      "section": "Definitions for kernel-events"
+    },
+    "emit_progress": {
+      "type": "Function",
+      "signature": "emit_progress(@var{view_id}, @var{fraction})",
+      "summary": "Emit a progress envelope. @var{fraction} is a number between 0 and 1, or @code{none} (= null in JSON) if the total is unknown.",
+      "body_md": "Emit a `progress` envelope. @var{fraction} is a number between 0 and\n1, or @code{none} (= `null` in JSON) if the total is unknown.",
+      "examples": [],
+      "see_also": [],
+      "section": "Definitions for kernel-events"
+    },
+    "kernel_events_available": {
+      "type": "Function",
+      "signature": "kernel_events_available()",
+      "summary": "Feature-detect. Returns @code{true} if the package is loaded — mirrors Python's from __future__ import … idiom for libraries that want to conditionally opt in.",
+      "body_md": "Feature-detect. Returns @code{true} if the package is loaded — mirrors\nPython's `from __future__ import …` idiom for libraries that want to\nconditionally opt in.",
+      "examples": [],
+      "see_also": [],
+      "section": "Definitions for kernel-events"
+    },
+    "show": {
+      "type": "Function",
+      "signature": "show(@var{expr})",
+      "summary": "Emit a display event for @var{expr} with a mime bundle (text/plain, application/x-maxima-latex, and others depending on the host's declared capabilities). The renderer picks the richest mime it can render.",
+      "body_md": "Emit a `display` event for @var{expr} with a mime bundle (text/plain,\napplication/x-maxima-latex, and others depending on the host's\ndeclared capabilities). The renderer picks the richest mime it can\nrender.\n\n```\nfor i:1 thru 3 do show(integrate(sin(i*x), x))$\n```",
+      "examples": [
+        {
+          "input": "for i:1 thru 3 do show(integrate(sin(i*x), x))$",
+          "output": ""
+        }
+      ],
+      "see_also": [],
+      "section": "Definitions for kernel-events"
+    }
+  },
+  "sections": [
+    {
+      "title": "Introduction to kernel-events",
+      "body_md": "Structured kernel-event channel for embedding Maxima in hosts. Emits\ntyped JSON envelopes (evaluation lifecycle, output, structured\ndisplay, errors, debugger events, streaming view frames, …) to a\nhost-registered sink. Embedding hosts consume the envelope stream and\nexpose it through their own protocols (HTTP/SSE for `maxima_mcp`,\nfd-3 for `aximar`, …).\n\nThe package is pre-alpha. The envelope grammar will evolve through\nv1.x as use cases land. See the design suite in `doc/design/` for the\narchitecture, prior-art references, and migration path from sentinel-\nbased stdout parsing.\n\nTo use the package:\n\n```\nload(\"kernel-events\");\n```\n\nBy itself the package emits envelopes only when a host has registered\na sink. Without a sink, all emission is a no-op — safe to load in any\ncontext."
+    },
+    {
+      "title": "Definitions for kernel-events",
+      "body_md": ""
+    },
+    {
+      "title": "See also",
+      "body_md": "- `doc/design/kernel-events.md` — full envelope catalogue and design\n- `doc/design/streaming.md` — streaming-specific envelopes and SUNDIALS PoC\n- `doc/design/animate.md` — paradigm-2 animation (independent path)\n- `doc/design/reactive-views.md` — north-star architecture"
+    }
+  ]
+}
