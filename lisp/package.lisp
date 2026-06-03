@@ -14,8 +14,13 @@
     #:register-sink
     #:unregister-sink
     #:list-sinks
-    ;; Envelope emission (called internally and by Maxima-callable wrappers)
+    #:clear-sinks
+    #:*debug-sinks*
+    ;; Envelope construction + emission
+    #:make-envelope
     #:emit-envelope
+    #:envelope-to-json
+    #:json-escape-string
     ;; Lifecycle queries (host-side)
     #:current-eval-id
     #:cancel-requested-p

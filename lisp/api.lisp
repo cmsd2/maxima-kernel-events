@@ -31,10 +31,13 @@
   (declare (ignore view-id fraction))
   (merror "TODO: implement $emit_progress"))
 
-(defmfun $emit_log (view-id level message)
+;; Parameter is named lvl, not level, because maxima::level is a
+;; special variable in Maxima core and declaring a special IGNORE
+;; is a style warning we'd rather not chase to the Maxima side.
+(defmfun $emit_log (view-id lvl message)
   "emit_log(view_id, level, message) — emit a log line attached to
    a view.  LEVEL is one of 'info, 'warn, 'error."
-  (declare (ignore view-id level message))
+  (declare (ignore view-id lvl message))
   (merror "TODO: implement $emit_log"))
 
 (defmfun $emit_done (view-id &optional (status '$complete))
