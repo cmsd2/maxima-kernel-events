@@ -27,4 +27,14 @@
     #:request-cancel
     ;; Capability negotiation
     #:set-render-mimes
-    #:render-mimes))
+    #:render-mimes
+    ;; Streaming envelopes
+    #:next-view-id
+    #:next-view-seq
+    #:reset-view-counters
+    #:emit-stream-begin
+    #:emit-frame
+    #:emit-progress
+    #:emit-stream-end
+    #:emit-stream-error
+    #:emit-log))

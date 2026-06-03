@@ -18,3 +18,5 @@
                        (or *load-pathname* *compile-file-pathname*)))
 (load (merge-pathnames "test-sink.lisp"
                        (or *load-pathname* *compile-file-pathname*)))
+(load (merge-pathnames "test-stream-events.lisp"
+                       (or *load-pathname* *compile-file-pathname*)))
