@@ -1,0 +1,10 @@
+[package]
+name = "kernel-events"
+version = "0.1.0"
+description = "Structured kernel-event channel for embedding Maxima in hosts (aximar, maxima_mcp, custom frontends)."
+license = "MIT"
+entry = "kernel-events.mac"
+doc = "doc/kernel-events.md"
+
+[test]
+files = ["rtest_kernel-events.mac"]

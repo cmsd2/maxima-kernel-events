@@ -1,0 +1,29 @@
+/* Tests for kernel-events */
+
+/* load the package */
+(load("kernel-events"), true);
+true;
+
+/* feature flag */
+kernel_events_available();
+true;
+
+/* TODO: replace this placeholder with real tests once the Lisp
+ * helpers are implemented.  Initial test plan:
+ *
+ *   - Sink registration: register a collecting sink, emit a known
+ *     envelope, assert it appears in the collector.
+ *   - Envelope JSON shape: assert each envelope type round-trips
+ *     through the JSON serializer to its documented schema.
+ *   - Mime bundle: build a bundle for a known expression, assert
+ *     text/plain and application/x-maxima-latex entries are present
+ *     and well-formed.
+ *   - Output stream wrapping: install, print a multi-arg line via
+ *     print(), assert one output envelope was emitted with the
+ *     correct text/stream/eval_id.
+ *   - Eval lifecycle: simulate an evaluation, assert eval_begin /
+ *     eval_result / eval_end fire in order with consistent eval_id.
+ *   - Cancellation: set cancel flag, assert check-cancel signals.
+ *
+ * See doc/design/kernel-events.md for the full envelope catalogue.
+ */

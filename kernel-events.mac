@@ -1,0 +1,33 @@
+/* kernel-events — structured kernel-event channel for embedding hosts
+ *
+ * Loads the Lisp-side producer: envelope writer, sink abstraction,
+ * mime-bundle builder, eval-lifecycle hooks, output-stream wrapper,
+ * debugger hooks, cancellation infrastructure, streaming envelopes.
+ *
+ * Maxima-callable API:
+ *   show(expr)             — emit a display event (mime bundle)
+ *   emit_display(pairs)    — emit a display with explicit mime bundle
+ *   emit_frame(view, data) — emit a streaming-view frame
+ *   emit_progress(view, f) — emit a streaming-view progress (0..1)
+ *   emit_log(view, msg)    — emit a log line attached to a view
+ *   emit_done(view, ...)   — close a streaming view
+ *
+ * Host-side API (called by aximar / maxima_mcp / custom hosts):
+ *   :lisp (kernel-events:register-sink #'my-sink-fn)
+ *
+ * See README.md for the design suite, status, and distribution paths.
+ */
+
+load("lisp/package.lisp")$
+load("lisp/sink.lisp")$
+load("lisp/envelope.lisp")$
+load("lisp/mime-bundle.lisp")$
+load("lisp/eval-hooks.lisp")$
+load("lisp/output-stream.lisp")$
+load("lisp/debugger-hooks.lisp")$
+load("lisp/cancel.lisp")$
+load("lisp/stream-events.lisp")$
+load("lisp/api.lisp")$
+
+/* Uncomment after running 'mxpm doc build' to enable ? and ?? help lookup */
+/* load("kernel-events-index.lisp")$ */
