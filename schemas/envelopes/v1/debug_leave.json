@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/debug_leave.json",
+  "title": "debug_leave",
+  "description": "Emitted when the kernel exits a debugger session. Paired 1:1 with debug_enter. depth is the level at the time the leave fires (the same value reported in the matching debug_enter).",
+  "type": "object",
+  "required": ["type", "level", "depth"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "debug_leave" },
+    "level": { "$ref": "common.json#/$defs/debug_level" },
+    "depth": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "eval_id": { "$ref": "common.json#/$defs/eval_id" }
+  }
+}

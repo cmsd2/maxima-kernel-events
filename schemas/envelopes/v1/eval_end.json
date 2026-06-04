@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/eval_end.json",
+  "title": "eval_end",
+  "description": "Emitted at the end of every top-level evaluation, regardless of outcome. Paired 1:1 with eval_begin. status=ok pairs with a preceding eval_result; status=error or cancelled does not.",
+  "type": "object",
+  "required": ["type", "eval_id", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "eval_end" },
+    "eval_id": { "$ref": "common.json#/$defs/eval_id" },
+    "status": { "$ref": "common.json#/$defs/eval_status" },
+    "duration_ms": {
+      "description": "Elapsed wall-clock milliseconds since eval_begin.",
+      "type": ["integer", "null"],
+      "minimum": 0
+    }
+  }
+}

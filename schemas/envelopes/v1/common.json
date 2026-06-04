@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/common.json",
+  "title": "kernel-events common definitions (v1)",
+  "description": "Shared $defs referenced by per-type envelope schemas.",
+  "$defs": {
+    "eval_id": {
+      "description": "Session-scoped identifier for a single top-level Maxima evaluation. Kernel-emitted ids match e_<n>; hosts that proxy other producers MAY use different formats.",
+      "type": ["string", "null"],
+      "pattern": "^e_[0-9]+$"
+    },
+    "view_id": {
+      "description": "Session-scoped identifier for a streaming view. Kernel-emitted ids match v_<n>.",
+      "type": "string",
+      "pattern": "^v_[0-9]+$"
+    },
+    "iso8601_utc": {
+      "description": "ISO 8601 UTC timestamp with second resolution, e.g. 2026-06-04T15:21:08Z.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "mime_bundle": {
+      "description": "Map of MIME type strings to renderable payloads. Conventionally includes text/plain; may include application/x-maxima-latex, image/png, etc. Payloads are MIME-type-specific (text/plain is a string; image/png is base64-encoded string; structured types are JSON objects).",
+      "type": "object",
+      "patternProperties": {
+        "^[a-z]+/[a-zA-Z0-9._+-]+$": {}
+      },
+      "additionalProperties": false
+    },
+    "eval_status": {
+      "description": "Outcome of a top-level evaluation.",
+      "type": "string",
+      "enum": ["ok", "error", "cancelled"]
+    },
+    "stream_status": {
+      "description": "Outcome of a streaming view.",
+      "type": "string",
+      "enum": ["complete", "cancelled", "error"]
+    },
+    "debug_level": {
+      "description": "Which debugger was entered.",
+      "type": "string",
+      "enum": ["maxima", "lisp"]
+    },
+    "stream_name": {
+      "description": "Standard output stream the line came from.",
+      "type": "string",
+      "enum": ["stdout", "stderr"]
+    },
+    "log_level": {
+      "type": "string",
+      "enum": ["info", "warn", "error", "debug"]
+    },
+    "json_boolean_with_null": {
+      "description": "JSON boolean or null. The kernel emits :false (a Lisp keyword) as the JSON value false; nil as null.",
+      "type": ["boolean", "null"]
+    }
+  }
+}

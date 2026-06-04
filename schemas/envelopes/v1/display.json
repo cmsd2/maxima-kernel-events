@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/display.json",
+  "title": "display",
+  "description": "Explicit structured display, emitted by show(expr) or emit_display([...]). Distinct from eval_result: a single eval may emit any number of display envelopes before its eval_result.",
+  "type": "object",
+  "required": ["type", "mime_bundle"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "display" },
+    "eval_id": { "$ref": "common.json#/$defs/eval_id" },
+    "mime_bundle": { "$ref": "common.json#/$defs/mime_bundle" }
+  }
+}

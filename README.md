@@ -17,18 +17,38 @@ consumption live elsewhere.
 Pre-alpha. API and envelope grammar are not yet stable. Iteration
 expected; pinning to a specific commit is recommended until 1.0.
 
+What's implemented today:
+
+| Layer                | Status      | Notes                                  |
+| -------------------- | ----------- | -------------------------------------- |
+| Sink registration    | done        | `register-sink`, `unregister-sink`, … |
+| Envelope + JSON      | done        | hand-rolled, dependency-free           |
+| MIME bundle          | done        | text/plain + `application/x-maxima-latex`, capability-gated |
+| Cancellation         | done        | flag + cooperative `check-cancel`      |
+| Eval lifecycle hooks | done        | wraps `dbm-read` + `toplevel-macsyma-eval` |
+| Output stream wrap   | done (SBCL) | Gray streams; non-SBCL is a no-op      |
+| Debugger hooks       | done        | wraps `*debugger-hook*` + `break-dbm-loop` |
+| Streaming envelopes  | done        | `stream_begin`/`frame`/`progress`/…    |
+| Maxima-callable API  | done        | `$show`, `$emit_display`, `$emit_frame`, … |
+| Envelope schemas     | done (v1)   | `schemas/envelopes/v1/`                |
+
+Not yet implemented:
+
+- `capabilities` / `ready` handshake envelopes.
+- Top-level `error` envelope (distinct from `eval_end :status :error`).
+- `stdin_request` envelope to pair with `debug_enter`.
+- `vars` envelope for Maxima variable inspection.
+
 ## Design
 
 See the design suite:
 
 - `doc/design/kernel-events.md` — the protocol foundation (envelope
-  catalogue, transport, prior art, load-only vs core-patched paths)
+  catalogue, transport, prior art, load-only vs core-patched paths).
 - `doc/design/streaming.md` — the first consumer (per-view streaming
-  with a SUNDIALS proof of concept)
-- `doc/design/animate.md` — paradigm-2 precomputed-frame animation
-  (no infrastructure required, ships independently)
-- `doc/design/reactive-views.md` — the north-star architecture this
-  fits into
+  with a SUNDIALS proof of concept).
+- `schemas/envelopes/v1/` — JSON Schema definitions for every
+  envelope type, plus a `README.md` index.
 
 ## Install
 

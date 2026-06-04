@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/log.json",
+  "title": "log",
+  "description": "Diagnostic log line attached to a streaming view. Distinct from output: log envelopes are structured and view-scoped, not stdout/stderr captures.",
+  "type": "object",
+  "required": ["type", "view_id", "level", "message"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "log" },
+    "view_id": { "$ref": "common.json#/$defs/view_id" },
+    "level": { "$ref": "common.json#/$defs/log_level" },
+    "message": {
+      "type": "string"
+    }
+  }
+}

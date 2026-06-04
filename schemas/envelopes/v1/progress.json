@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/progress.json",
+  "title": "progress",
+  "description": "Optional progress indicator for a streaming view. fraction in [0,1] is the recommended encoding; null when the total is unknown.",
+  "type": "object",
+  "required": ["type", "view_id"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "progress" },
+    "view_id": { "$ref": "common.json#/$defs/view_id" },
+    "fraction": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "message": {
+      "description": "Optional human-readable progress message (e.g. \"step 42/100\").",
+      "type": ["string", "null"]
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/stream_error.json",
+  "title": "stream_error",
+  "description": "Producer-side failure within a stream. When recoverable=true the view may continue (more frames may follow); when false the view is terminated and a stream_end with status=error follows.",
+  "type": "object",
+  "required": ["type", "view_id", "message"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "stream_error" },
+    "view_id": { "$ref": "common.json#/$defs/view_id" },
+    "message": {
+      "type": "string"
+    },
+    "recoverable": {
+      "type": "boolean"
+    }
+  }
+}

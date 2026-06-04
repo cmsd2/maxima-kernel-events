@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/debug_enter.json",
+  "title": "debug_enter",
+  "description": "Emitted when the kernel enters a debugger session. level=maxima covers Maxima's dbm break loop (entered from merror when *mdebug* is truthy, or from a tripped breakpoint). level=lisp covers SBCL's *debugger-hook*. depth tracks nesting; pair with the corresponding debug_leave.",
+  "type": "object",
+  "required": ["type", "level", "depth"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "debug_enter" },
+    "level": { "$ref": "common.json#/$defs/debug_level" },
+    "depth": {
+      "description": "Nesting level the kernel is now at (1-based).",
+      "type": "integer",
+      "minimum": 1
+    },
+    "eval_id": { "$ref": "common.json#/$defs/eval_id" },
+    "condition_type": {
+      "description": "For level=lisp, the condition's class name as a string. Null for level=maxima.",
+      "type": ["string", "null"]
+    },
+    "message": {
+      "description": "Human-readable error message. For level=maxima this is the message field of $error; for level=lisp it is the printed condition.",
+      "type": ["string", "null"]
+    }
+  }
+}

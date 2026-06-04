@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/stream_begin.json",
+  "title": "stream_begin",
+  "description": "Opens a streaming view. The producer (a library author) emits this once, then any number of frame and progress envelopes, then a single stream_end (or stream_error). kind is a renderer-side dispatch keyword identifying the view shape (e.g. ode_trajectory, mcmc_chain). metadata carries kind-specific configuration consumed by the host's extend handler.",
+  "type": "object",
+  "required": ["type", "view_id", "kind", "started_at"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "stream_begin" },
+    "view_id": { "$ref": "common.json#/$defs/view_id" },
+    "kind": {
+      "description": "Renderer-side dispatch tag (e.g. \"ode_trajectory\", \"mcmc_chain\").",
+      "type": "string"
+    },
+    "started_at": { "$ref": "common.json#/$defs/iso8601_utc" },
+    "expected_frames": {
+      "description": "Total frame count if known; null for unbounded streams.",
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
+    "metadata": {
+      "description": "Kind-specific configuration. Schema is owned by the producer/renderer pair.",
+      "type": ["object", "null"]
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/eval_result.json",
+  "title": "eval_result",
+  "description": "Emitted after a successful evaluation, carrying the result value as a mime bundle. NOT emitted when the eval errors. The suppressed flag mirrors the user's input terminator: false for `;`, true for `$`. Hosts MAY elide rendering of suppressed results but should still record them.",
+  "type": "object",
+  "required": ["type", "eval_id", "suppressed", "mime_bundle"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "eval_result" },
+    "eval_id": { "$ref": "common.json#/$defs/eval_id" },
+    "output_label": {
+      "description": "The Maxima output label string Maxima would assign (e.g. \"%o7\"). Null if no label is available.",
+      "type": ["string", "null"]
+    },
+    "suppressed": {
+      "description": "True when the user terminated input with `$' (suppress echo).",
+      "type": "boolean"
+    },
+    "mime_bundle": { "$ref": "common.json#/$defs/mime_bundle" }
+  }
+}

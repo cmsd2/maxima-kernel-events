@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/stream_end.json",
+  "title": "stream_end",
+  "description": "Closes a streaming view. final_seq is the seq of the last frame emitted; hosts can validate they received that many frames. After stream_end the kernel releases the per-view seq counter.",
+  "type": "object",
+  "required": ["type", "view_id", "status"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "stream_end" },
+    "view_id": { "$ref": "common.json#/$defs/view_id" },
+    "status": { "$ref": "common.json#/$defs/stream_status" },
+    "final_seq": {
+      "description": "Seq of the last frame; 0 if no frames were emitted.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "duration_ms": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    }
+  }
+}

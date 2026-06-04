@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/output.json",
+  "title": "output",
+  "description": "One line written to *standard-output* or *error-output* during an evaluation. Lines are split on newlines; a trailing partial line is held in the wrapper's buffer until a finish-output or uninstall flushes it. eval_id is null for output emitted outside any eval.",
+  "type": "object",
+  "required": ["type", "stream", "mime", "text"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "output" },
+    "eval_id": { "$ref": "common.json#/$defs/eval_id" },
+    "stream": { "$ref": "common.json#/$defs/stream_name" },
+    "mime": {
+      "description": "MIME type of the text payload. Always text/plain for now; reserved for future formats.",
+      "type": "string",
+      "const": "text/plain"
+    },
+    "text": {
+      "description": "The line content, including the trailing newline when present.",
+      "type": "string"
+    }
+  }
+}

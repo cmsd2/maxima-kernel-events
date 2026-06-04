@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/frame.json",
+  "title": "frame",
+  "description": "One increment of streaming-view data. seq is monotonically increasing per view_id starting at 1; hosts can use seq to detect gaps or reorder if the transport admits reorderings. payload shape is owned by the view kind (declared in the preceding stream_begin).",
+  "type": "object",
+  "required": ["type", "view_id", "seq", "payload"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "frame" },
+    "view_id": { "$ref": "common.json#/$defs/view_id" },
+    "seq": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "payload": {
+      "description": "Kind-specific extend payload. Schema owned by producer/renderer pair (e.g. ode_trajectory: {t: number, y: number[]}).",
+      "type": ["object", "array", "string", "number", "boolean", "null"]
+    }
+  }
+}

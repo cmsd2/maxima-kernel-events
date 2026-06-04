@@ -563,6 +563,12 @@ extension knows which notebook (and which controller) it belongs to.
 
 ## Wire protocol — envelope schemas
 
+Machine-readable JSON Schema (Draft 2020-12) definitions for every
+envelope type implemented today live in
+[`schemas/envelopes/v1/`](../../schemas/envelopes/v1/). The narrative
+catalogue below is the design source of truth; the schemas are the
+runtime-validatable subset.
+
 All envelopes share a `type` discriminator. JSON-lines, one envelope per
 newline. Envelopes are grouped here by lifecycle phase:
 

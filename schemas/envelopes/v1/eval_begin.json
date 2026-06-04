@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/eval_begin.json",
+  "title": "eval_begin",
+  "description": "Emitted at the start of every top-level Maxima evaluation. Wraps a single user input from dbm-read through toplevel-macsyma-eval. Nested batch/demo/load evals each emit their own eval_begin with a fresh id.",
+  "type": "object",
+  "required": ["type", "eval_id", "started_at"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "eval_begin" },
+    "eval_id": { "$ref": "common.json#/$defs/eval_id" },
+    "started_at": { "$ref": "common.json#/$defs/iso8601_utc" }
+  }
+}
