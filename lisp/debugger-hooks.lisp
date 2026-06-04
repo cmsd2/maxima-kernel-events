@@ -41,37 +41,17 @@
   "Reset *current-debug-depth* to 0.  Used by tests."
   (setf *current-debug-depth* 0))
 
-(defun maxima-error-message ()
-  "Read maxima::$error and render its message component to a string.
-   Returns NIL if $error is unbound or empty.  Safe to call from a
-   debugger context: catches any error that might fall out of mgrind."
-  (handler-case
-      (let ((err (and (boundp 'maxima::$error)
-                      (symbol-value 'maxima::$error))))
-        (when (and (consp err) (consp (cdr err)))
-          ;; $error is `((mlist simp) <message> . <args>)'.  The
-          ;; <message> is typically a string already; if not, render
-          ;; it with princ.
-          (let ((msg (second err)))
-            (cond ((stringp msg) msg)
-                  ((null msg) nil)
-                  (t (princ-to-string msg))))))
-    (error () nil)))
-
-(defun condition-message (condition)
-  "Render CONDITION to a human-readable string.  Defensive: a
-   broken print-object method shouldn't infinite-loop into the
-   debugger."
-  (handler-case (princ-to-string condition)
-    (error () (format nil "<unprintable ~s>" (type-of condition)))))
+;;; maxima-error-message + condition-message live in error-event.lisp.
 
 ;;; --- Typed emitters ----------------------------------------------------
 
-(defun emit-debug-enter (level &key condition-type message)
+(defun emit-debug-enter (level &key condition-type message frames restarts)
   "Emit a debug_enter envelope.
    LEVEL is :maxima or :lisp.  Increments *current-debug-depth* and
-   tags the envelope with the new depth.  Defensive: a sink that
-   errors must not re-trigger the debugger."
+   tags the envelope with the new depth.  FRAMES is a vector of
+   frame description strings; RESTARTS is a vector of plists
+   (:name :description).  Both are NIL when unavailable.  Defensive:
+   a sink that errors must not re-trigger the debugger."
   (incf *current-debug-depth*)
   (handler-case
       (emit-envelope
@@ -80,6 +60,8 @@
                        :depth          *current-debug-depth*
                        :condition_type condition-type
                        :message        message
+                       :frames         frames
+                       :restarts       restarts
                        :eval_id        *current-eval-id*))
     (error () nil)))
 
@@ -112,10 +94,10 @@
 
 (defun make-lisp-debugger-hook (orig)
   "Build the *debugger-hook* replacement closure.  Emits debug_enter
-   with the condition's type + message, then invokes the debugger
-   ourselves (rather than returning and letting SBCL invoke it
-   afterwards) so the unwind-protect cleanup fires *after* the
-   debugger session exits.
+   with the condition's type + message + backtrace + restarts, then
+   invokes the debugger ourselves (rather than returning and letting
+   SBCL invoke it afterwards) so the unwind-protect cleanup fires
+   *after* the debugger session exits.
 
    ORIG is the pre-install value of *debugger-hook* (possibly NIL).
    We bind *debugger-hook* to NIL inside the unwind-protect to
@@ -124,11 +106,15 @@
    even got to its own debugger."
   (lambda (condition hook)
     (declare (ignore hook))
-    (let ((type    (type-of condition))
-          (message (condition-message condition)))
+    (let ((type     (type-of condition))
+          (message  (condition-message condition))
+          (frames   (capture-sbcl-backtrace))
+          (restarts (capture-restarts condition)))
       (emit-debug-enter :lisp
                         :condition-type type
-                        :message        message)
+                        :message        message
+                        :frames         frames
+                        :restarts       restarts)
       (unwind-protect
           (let ((*debugger-hook* nil))
             (if orig

@@ -24,11 +24,11 @@ load("lisp/envelope.lisp")$
 load("lisp/mime-bundle.lisp")$
 load("lisp/cancel.lisp")$
 load("lisp/stream-events.lisp")$
+load("lisp/error-event.lisp")$
 load("lisp/eval-hooks.lisp")$
 load("lisp/output-stream.lisp")$
 load("lisp/debugger-hooks.lisp")$
 load("lisp/session.lisp")$
-load("lisp/error-event.lisp")$
 load("lisp/stdin.lisp")$
 load("lisp/vars.lisp")$
 load("lisp/api.lisp")$

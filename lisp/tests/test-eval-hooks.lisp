@@ -223,26 +223,100 @@
 
 ;; ----------------------------------------------------------------
 ;; Error path
+;;
+;; The toplevel wrap observes four failure shapes and surfaces each
+;; as an `error' envelope before the closing `eval_end':
+;;   - throw 'macsyma-quit       -> kind :maxima_error (re-thrown)
+;;   - maxima-$error signal      -> kind :maxima_error (declined)
+;;   - cancellation-requested    -> kind :cancelled    (consumed)
+;;   - any other cl:error        -> kind :lisp_error   (declined)
 
-(deftest eval-hooks-error-emits-end-with-error-status
+(deftest eval-hooks-maxima-error-signal-emits-error-envelope
+  ;; When merror signals (e.g. *merror-signals-$error-p* T, or
+  ;; errcatch frame), our handler-bind observes maxima-$error,
+  ;; emits :maxima_error, and declines so the condition keeps
+  ;; propagating.  Simulate by signalling directly — calling real
+  ;; merror inside a test interacts badly with rtest's errcatch.
   (with-installed-eval-hooks (envs)
-    ;; 1/0 triggers Maxima's division-by-zero merror.  By default
-    ;; merror calls `throw' to escape — bind
-    ;; *merror-signals-$error-p* so it signals a Lisp condition that
-    ;; handler-case can catch.
-    (let ((maxima::*merror-signals-$error-p* t))
-      (handler-case
-          (maxima::toplevel-macsyma-eval
-            (list (list 'maxima::mquotient) 1 0))
+    (kernel-events:uninstall-eval-hooks)
+    (let ((maxima::$error (list (list 'maxima::mlist) "test failure"))
+          (wrap (kernel-events::make-toplevel-eval-wrap
+                  (lambda (x)
+                    (declare (ignore x))
+                    (error 'maxima::maxima-$error)))))
+      (handler-case (funcall wrap 1)
         (maxima::maxima-$error () nil)
         (error () nil)))
-    (let ((begins (envs-of-type envs :eval_begin))
-          (ends   (envs-of-type envs :eval_end))
+    (let ((errs    (envs-of-type envs :error))
+          (begins  (envs-of-type envs :eval_begin))
+          (ends    (envs-of-type envs :eval_end))
           (results (envs-of-type envs :eval_result)))
       (assert-equal 1 (length begins))
       (assert-equal 1 (length ends))
-      (assert-equal 0 (length results)
-                    "no eval_result should be emitted on error")
+      (assert-equal 0 (length results))
+      (assert-equal :error (getf (first ends) :status))
+      (assert-equal 1 (length errs))
+      (assert-equal :maxima_error (getf (first errs) :kind)))))
+
+(deftest eval-hooks-maxima-throw-emits-error-envelope
+  ;; Default merror path: throw 'macsyma-quit (NOT a CL condition).
+  ;; The wrap catches the throw, emits :maxima_error, and re-throws
+  ;; so continue's outer catch still sees the abort.  Simulate the
+  ;; throw directly so the test doesn't depend on triggering merror.
+  (with-installed-eval-hooks (envs)
+    (kernel-events:uninstall-eval-hooks)
+    (let ((maxima::$error (list (list 'maxima::mlist) "thrown"))
+          (wrap (kernel-events::make-toplevel-eval-wrap
+                  (lambda (x)
+                    (declare (ignore x))
+                    (throw 'maxima::macsyma-quit 'maxima::maxima-error)))))
+      (catch 'maxima::macsyma-quit (funcall wrap 1)))
+    (let ((errs (envs-of-type envs :error))
+          (ends (envs-of-type envs :eval_end)))
+      (assert-equal 1 (length errs))
+      (assert-equal :maxima_error (getf (first errs) :kind))
+      (assert-equal "thrown" (getf (first errs) :message))
+      (assert-equal 1 (length ends))
+      (assert-equal :error (getf (first ends) :status)))))
+
+(deftest eval-hooks-cancellation-consumed-and-marked
+  ;; cancellation-requested raised during eval is consumed by the
+  ;; handler-case clause; the wrap emits :cancelled and sets
+  ;; eval_end :status to :cancelled.  We bypass install/uninstall
+  ;; and call the closure directly with an orig that signals.
+  (with-installed-eval-hooks (envs)
+    (kernel-events:uninstall-eval-hooks)
+    (let ((wrap (kernel-events::make-toplevel-eval-wrap
+                  (lambda (x)
+                    (declare (ignore x))
+                    (error 'kernel-events:cancellation-requested
+                           :view-id "v_test")))))
+      (funcall wrap 1))
+    (let ((errs (envs-of-type envs :error))
+          (ends (envs-of-type envs :eval_end)))
+      (assert-equal 1 (length errs))
+      (assert-equal :cancelled (getf (first errs) :kind))
+      (assert-equal 1 (length ends))
+      (assert-equal :cancelled (getf (first ends) :status)))))
+
+(deftest eval-hooks-lisp-error-emits-lisp-error-envelope
+  ;; A non-Maxima Lisp error escapes through the eval; the wrap
+  ;; observes it via handler-bind and emits :lisp_error.  The
+  ;; condition continues to propagate; the test's handler-case
+  ;; catches it.
+  (with-installed-eval-hooks (envs)
+    (kernel-events:uninstall-eval-hooks)
+    (let ((wrap (kernel-events::make-toplevel-eval-wrap
+                  (lambda (x)
+                    (declare (ignore x))
+                    (error "synthesized lisp error")))))
+      (handler-case (funcall wrap 1) (error () nil)))
+    (let ((errs (envs-of-type envs :error))
+          (ends (envs-of-type envs :eval_end)))
+      (assert-equal 1 (length errs))
+      (assert-equal :lisp_error (getf (first errs) :kind))
+      (assert-true (stringp (getf (first errs) :condition_type)))
+      (assert-equal 1 (length ends))
       (assert-equal :error (getf (first ends) :status)))))
 
 ;; ----------------------------------------------------------------

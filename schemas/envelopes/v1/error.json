@@ -17,6 +17,10 @@
     "message": {
       "type": "string"
     },
+    "condition_type": {
+      "description": "For kind=lisp_error, the Lisp condition's class name as a string. Null for other kinds.",
+      "type": ["string", "null"]
+    },
     "location": {
       "description": "Optional source location.",
       "type": ["object", "null"],

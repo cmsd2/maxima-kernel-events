@@ -22,6 +22,24 @@
     "message": {
       "description": "Human-readable error message. For level=maxima this is the message field of $error; for level=lisp it is the printed condition.",
       "type": ["string", "null"]
+    },
+    "frames": {
+      "description": "Backtrace at debugger entry, one element per frame, outermost first. NULL when frame capture is unavailable (non-SBCL builds, or when sb-debug printing itself errors). For level=lisp this is the SBCL backtrace; for level=maxima it is reserved for the dbm stack and is NULL today.",
+      "type": ["array", "null"],
+      "items": { "type": "string" }
+    },
+    "restarts": {
+      "description": "Available restarts for the current condition. Empty array when none are available; NULL when restart inspection is unsupported. Each entry is { name, description }; name is the lowercased restart class name (e.g. \"abort\", \"continue\") and description is the printed restart text.",
+      "type": ["array", "null"],
+      "items": {
+        "type": "object",
+        "required": ["name", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "name":        { "type": "string" },
+          "description": { "type": "string" }
+        }
+      }
     }
   }
 }

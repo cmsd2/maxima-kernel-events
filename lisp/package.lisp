@@ -45,6 +45,10 @@
     #:*default-capabilities-supports*
     ;; Structured error
     #:emit-error
+    #:maxima-error-message
+    #:condition-message
+    #:capture-sbcl-backtrace
+    #:capture-restarts
     ;; stdin requests
     #:emit-stdin-request
     #:next-stdin-request-id

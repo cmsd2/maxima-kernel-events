@@ -181,7 +181,23 @@
 
 (defun make-toplevel-eval-wrap (orig)
   "Build the toplevel-macsyma-eval replacement closure that wraps
-   ORIG.  Bound to MAXIMA::TOPLEVEL-MACSYMA-EVAL by install-eval-hooks."
+   ORIG.  Bound to MAXIMA::TOPLEVEL-MACSYMA-EVAL by install-eval-hooks.
+
+   Three failure modes are observed and surfaced as `error'
+   envelopes before the closing `eval_end':
+
+     - cancellation-requested  ->  kind = :cancelled  (consumed)
+     - maxima::maxima-$error   ->  kind = :maxima_error (declined)
+     - any other cl:error      ->  kind = :lisp_error (declined)
+     - (throw 'macsyma-quit)   ->  kind = :maxima_error (re-thrown)
+
+   `Consumed' = handler-case unwinds the condition; status :cancelled.
+   `Declined' = handler-bind observes and lets the condition keep
+   propagating; status stays :error and the caller (continue / batch
+   / *debugger-hook*) decides what happens next.
+   `Re-thrown' = we catch the macsyma-quit tag long enough to snapshot
+   $error, then re-throw so continue's outer catch still sees the
+   abort."
   (lambda (x)
     (let ((eval-id    (next-eval-id))
           (start      (get-internal-real-time))
@@ -195,9 +211,41 @@
         (reset-cancel-flag)
         (emit-eval-begin eval-id)
         (unwind-protect
-            (progn
-              (setf result (funcall orig x))
-              (setf status :ok))
+            (handler-case
+                (handler-bind
+                    ((error
+                       (lambda (cnd)
+                         (typecase cnd
+                           (cancellation-requested
+                            ;; Outer handler-case will consume; emit
+                            ;; the envelope there to keep the flow
+                            ;; explicit.
+                            nil)
+                           (maxima::maxima-$error
+                            (emit-error :maxima_error
+                                        (or (maxima-error-message)
+                                            (condition-message cnd))))
+                           (t
+                            (emit-error :lisp_error
+                                        (condition-message cnd)
+                                        :condition-type
+                                        (string (type-of cnd))))))))
+                  (let ((completed nil)
+                        (catch-val nil))
+                    (setf catch-val
+                          (catch 'maxima::macsyma-quit
+                            (setf result (funcall orig x))
+                            (setf status :ok)
+                            (setf completed t)
+                            :ok))
+                    (unless completed
+                      (emit-error :maxima_error
+                                  (or (maxima-error-message)
+                                      "Maxima error"))
+                      (throw 'maxima::macsyma-quit catch-val))))
+              (cancellation-requested (cnd)
+                (emit-error :cancelled (condition-message cnd))
+                (setf status :cancelled)))
           (when (eq status :ok)
             (emit-eval-result eval-id result
                               :label      (current-output-label-string)

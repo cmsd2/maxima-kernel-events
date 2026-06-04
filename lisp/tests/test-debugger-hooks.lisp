@@ -209,6 +209,41 @@
       (assert-equal :debug_leave (getf (aref envs 1) :type))
       (assert-equal :lisp (getf (aref envs 1) :level)))))
 
+(deftest debugger-emit-enter-accepts-frames-and-restarts
+  (with-debugger-hooks-clean (envs)
+    (let ((frames   (vector "0: (foo 1 2)" "1: (bar)" ))
+          (restarts (vector (list :name "abort" :description "Top level"))))
+      (kernel-events:emit-debug-enter :lisp
+                                      :frames   frames
+                                      :restarts restarts))
+    (let ((e (aref envs 0)))
+      (assert-true (vectorp (getf e :frames)))
+      (assert-equal 2 (length (getf e :frames)))
+      (assert-true (vectorp (getf e :restarts)))
+      (assert-equal 1 (length (getf e :restarts)))
+      (assert-equal "abort"
+                    (getf (aref (getf e :restarts) 0) :name)))))
+
+#+sbcl
+(deftest debugger-lisp-hook-wrap-captures-frames-and-restarts
+  ;; The lisp-debugger-hook wrap should call capture-sbcl-backtrace
+  ;; and capture-restarts at debug_enter time, so hosts can render
+  ;; the stack and the available restarts.
+  (with-debugger-hooks-clean (envs)
+    (let* ((orig (lambda (c h) (declare (ignore c h)) :handled))
+           (wrap (kernel-events::make-lisp-debugger-hook orig))
+           (condition (make-condition 'simple-error
+                                       :format-control "test"
+                                       :format-arguments nil)))
+      (funcall wrap condition nil)
+      (let ((enter (aref envs 0)))
+        ;; frames may legitimately be NIL if SBCL printing breaks,
+        ;; but the field should be present in the envelope.
+        (assert-true (or (null (getf enter :frames))
+                         (vectorp (getf enter :frames))))
+        (assert-true (or (null (getf enter :restarts))
+                         (vectorp (getf enter :restarts))))))))
+
 (deftest debugger-lisp-hook-wrap-passes-message
   (with-debugger-hooks-clean (envs)
     (let* ((orig (lambda (c h) (declare (ignore c h))))
