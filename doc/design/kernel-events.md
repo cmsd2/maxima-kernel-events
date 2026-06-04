@@ -599,6 +599,7 @@ kernel.
 ```json
 {
   "type": "capabilities",
+  "protocol_version": "1",
   "kernel_version": "5.47.0",
   "lisp": "SBCL 2.4.10",
   "packages": ["numerics", "a Plotly-emitting library", "a CVODE-binding package"],
@@ -606,6 +607,12 @@ kernel.
                "structured_errors", "debug_events"]
 }
 ```
+
+`protocol_version` carries the envelope grammar version this build
+implements. It matches the schema directory name (`schemas/envelopes/v1/`)
+and is the canonical drift-detection field — hosts validating each
+capabilities envelope against the schema reject a mismatched version
+before consuming the rest of the stream.
 
 The renderer's response, sent via a `negotiate_capabilities` MCP tool
 on host, includes the renderer's accepted mime types:
@@ -813,8 +820,17 @@ at `process.rs:572, 623, 636`.
   "eval_id": "e_42",
   "level": "maxima",
   "depth": 1,
+  "condition_type": null,
+  "message": "Division by 0",
   "frames": [
-    {"function": "myfun", "args": ["x=3"], "source_line": 4}
+    "#0: myfun(x=3) (foo.mac line 4)",
+    "#1: bar(y=2)"
+  ],
+  "restarts": [
+    {"name": "resume",
+     "description": "Continue the computation."},
+    {"name": "quit",
+     "description": "Quit this level."}
   ]
 }
 ```
@@ -822,6 +838,20 @@ at `process.rs:572, 623, 636`.
 `level` is `"maxima"` for the `(dbm:N>` debugger and `"lisp"` for the
 SBCL `0]` debugger. `depth` is the debugger nesting level (matches the
 N in `(dbm:N>`).
+
+`frames` is an array of one string per stack frame, innermost first.
+The format is the implementation's choice: SBCL renders via
+`sb-debug:print-backtrace`; Maxima dbm uses `print-one-frame`. Hosts
+display these verbatim — structured frame inspection
+(function-name / args / source-line as separate fields) is a v2
+candidate once a consumer needs it.
+
+`restarts` is an array of `{name, description}` pairs naming the
+recovery options available at this debugger entry. For SBCL these
+are the CL restarts (`abort`, `continue`, etc.); for Maxima these
+are the dbm command keywords (`resume`, `quit`, `frame`, `break`,
+`help`, …). The renderer surfaces them as buttons or shortcuts in
+the debugger UI.
 
 ### `debug_leave`
 
