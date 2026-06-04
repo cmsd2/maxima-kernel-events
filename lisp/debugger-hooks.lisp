@@ -87,11 +87,17 @@
 
 (defun make-break-dbm-loop-wrap (orig)
   "Build the break-dbm-loop replacement closure.  Emits debug_enter
-   on entry with the captured Maxima error message; emits
-   debug_leave from unwind-protect cleanup."
+   on entry with the captured Maxima error message, the dbm call-
+   stack as frames, and the registered dbm commands as restarts;
+   emits debug_leave from unwind-protect cleanup."
   (lambda (at)
-    (let ((message (maxima-error-message)))
-      (emit-debug-enter :maxima :message message)
+    (let ((message  (maxima-error-message))
+          (frames   (capture-maxima-frames))
+          (restarts (capture-maxima-restarts)))
+      (emit-debug-enter :maxima
+                        :message  message
+                        :frames   frames
+                        :restarts restarts)
       (unwind-protect
           (funcall orig at)
         (emit-debug-leave :maxima)))))

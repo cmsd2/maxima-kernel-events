@@ -181,6 +181,51 @@
         (funcall wrap nil)
         (assert-equal "test failure" (getf (aref envs 0) :message))))))
 
+(deftest debugger-break-dbm-loop-wrap-captures-frames-and-restarts
+  ;; The dbm wrap calls capture-maxima-frames and
+  ;; capture-maxima-restarts at enter time; both fields should be
+  ;; present on the envelope.  Frames may be empty (no in-flight
+  ;; dbm session in a unit test) but should be a vector; restarts
+  ;; should include at least the built-in dbm commands.
+  (with-debugger-hooks-clean (envs)
+    (let* ((orig (lambda (at) (declare (ignore at)) :resume))
+           (wrap (kernel-events::make-break-dbm-loop-wrap orig)))
+      (funcall wrap nil)
+      (let ((enter (aref envs 0)))
+        (assert-true (or (null (getf enter :frames))
+                         (vectorp (getf enter :frames))))
+        (assert-true (vectorp (getf enter :restarts)))))))
+
+;; ----------------------------------------------------------------
+;; capture-maxima-restarts: shape + presence of built-in commands
+
+(deftest debugger-capture-maxima-restarts-returns-vector
+  (let ((rs (kernel-events:capture-maxima-restarts)))
+    (assert-true (vectorp rs))
+    (assert-true (plusp (length rs))
+                 "Maxima ships with built-in dbm commands; expected at least one")))
+
+(deftest debugger-capture-maxima-restarts-shape-is-name-description
+  (let* ((rs (kernel-events:capture-maxima-restarts))
+         (first (and (plusp (length rs)) (aref rs 0))))
+    (when first
+      (assert-true (stringp (getf first :name)))
+      (assert-true (stringp (getf first :description))))))
+
+(deftest debugger-capture-maxima-restarts-name-is-lowercased
+  (let ((rs (kernel-events:capture-maxima-restarts)))
+    (loop for r across rs
+          for n = (getf r :name)
+          do (assert-true (every (lambda (c) (not (upper-case-p c))) n)
+                          "restart :name should be lowercased"))))
+
+;; ----------------------------------------------------------------
+;; capture-maxima-frames: defensive — returns vector or NIL
+
+(deftest debugger-capture-maxima-frames-returns-vector-or-nil
+  (let ((fs (kernel-events:capture-maxima-frames)))
+    (assert-true (or (null fs) (vectorp fs)))))
+
 ;; ----------------------------------------------------------------
 ;; Lisp *debugger-hook* wrap
 ;;

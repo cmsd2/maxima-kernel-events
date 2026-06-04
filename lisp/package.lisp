@@ -51,6 +51,8 @@
     #:condition-message
     #:capture-sbcl-backtrace
     #:capture-restarts
+    #:capture-maxima-frames
+    #:capture-maxima-restarts
     ;; stdin requests
     #:emit-stdin-request
     #:next-stdin-request-id

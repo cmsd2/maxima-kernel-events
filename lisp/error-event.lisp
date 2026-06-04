@@ -84,6 +84,50 @@
     (error () nil))
   #-sbcl nil)
 
+(defun capture-maxima-frames (&key (max-frames 32))
+  "Capture Maxima's dbm call-stack frames as a vector of description
+   strings, innermost first — the same shape SBCL backtrace capture
+   returns.  Uses maxima::print-one-frame so the formatting matches
+   `:bt' inside the dbm prompt.  Returns NIL if frame inspection
+   itself errors (e.g. *mlambda-call-stack* is unbound)."
+  (handler-case
+      (let ((out (make-array 0 :adjustable t :fill-pointer 0)))
+        (block frames
+          (dotimes (n max-frames)
+            (let ((text
+                    (handler-case
+                        (with-output-to-string (s)
+                          (let ((*debug-io* s))
+                            (unless (maxima::print-one-frame n t)
+                              (return-from frames))))
+                      (error () nil))))
+              (when (and text (plusp (length text)))
+                (vector-push-extend
+                  (string-right-trim '(#\Newline) text)
+                  out)))))
+        out)
+    (error () nil)))
+
+(defun capture-maxima-restarts ()
+  "Capture Maxima dbm `restarts' — the registered break-commands.
+   These are command keywords like :c (continue) and :t (top) that
+   the user can select from the dbm prompt.  Returns a vector of
+   plists (:name :description), matching the shape returned by
+   capture-restarts (the CL side)."
+  (handler-case
+      (let ((out (make-array 0 :adjustable t :fill-pointer 0)))
+        (do-symbols (s (find-package :keyword))
+          (let ((cmd (get s 'maxima::break-command))
+                (doc (get s 'maxima::break-doc)))
+            (when (and cmd doc)
+              (vector-push-extend
+                (list :name        (string-downcase (symbol-name s))
+                      :description (if (stringp doc) doc
+                                       (princ-to-string doc)))
+                out))))
+        out)
+    (error () nil)))
+
 (defun capture-restarts (condition)
   "Capture available restarts for CONDITION as a vector of plists
    (:name string :description string).  Returns NIL if the runtime

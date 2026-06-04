@@ -27,7 +27,7 @@ What's implemented today:
 | Cancellation           | done        | flag + cooperative `check-cancel`      |
 | Eval lifecycle hooks   | done        | wraps `dbm-read` + `toplevel-macsyma-eval` |
 | Output stream wrap     | done (SBCL) | Gray streams; non-SBCL is a no-op      |
-| Debugger hooks         | done        | wraps `*debugger-hook*` + `break-dbm-loop` |
+| Debugger hooks         | done        | wraps `*debugger-hook*` + `break-dbm-loop`; both sides capture frames + restarts |
 | Session handshake      | done        | `emit-capabilities`, `emit-ready`      |
 | Structured error event | done        | `emit-error` with `kind`/`message`/…   |
 | stdin request          | done        | emitter + `$readonly` wrap + dbm-prompt|
