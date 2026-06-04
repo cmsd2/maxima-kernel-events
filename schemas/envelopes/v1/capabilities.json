@@ -4,10 +4,15 @@
   "title": "capabilities",
   "description": "Session-startup announcement of kernel versions and supported features. Emitted by the host after registering its sink, before any evaluation. The host follows up with a negotiated render-mime list (see set-render-mimes / *render-mimes*) which the kernel uses to gate expensive MIME bundle production.",
   "type": "object",
-  "required": ["type", "supports"],
+  "required": ["type", "protocol_version", "supports"],
   "additionalProperties": false,
   "properties": {
     "type": { "const": "capabilities" },
+    "protocol_version": {
+      "description": "Envelope grammar version this build implements. Matches the schema directory name (v1/); hosts use it to detect protocol drift before processing subsequent envelopes.",
+      "type": "string",
+      "const": "1"
+    },
     "kernel_version": {
       "description": "Maxima's *autoconf-version* string. Null if the global isn't bound.",
       "type": ["string", "null"]

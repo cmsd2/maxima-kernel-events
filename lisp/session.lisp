@@ -10,6 +10,12 @@
 
 (in-package :kernel-events)
 
+(defparameter *protocol-version* "1"
+  "Envelope grammar version this build implements.  Sent in the
+   capabilities envelope so hosts can detect protocol drift.  This
+   matches the schema directory name (schemas/envelopes/v1/) — a
+   v2 schema set would ship alongside *protocol-version* = \"2\".")
+
 (defvar *default-capabilities-supports*
   '("eval_lifecycle" "output_capture" "structured_errors"
     "debug_events" "streaming" "mime_bundles" "cancellation"
@@ -44,11 +50,12 @@
    for tests)."
   (emit-envelope
     (make-envelope :capabilities
-                   :kernel_version (or kernel-version
-                                       (maxima-version-string))
-                   :lisp           (or lisp (lisp-version-string))
-                   :packages       (or packages '())
-                   :supports       supports)))
+                   :protocol_version *protocol-version*
+                   :kernel_version   (or kernel-version
+                                         (maxima-version-string))
+                   :lisp             (or lisp (lisp-version-string))
+                   :packages         (or packages '())
+                   :supports         supports)))
 
 (defun emit-ready ()
   "Emit a ready envelope signalling the kernel is ready to accept

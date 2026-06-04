@@ -51,6 +51,15 @@
     (kernel-events:emit-capabilities :supports '("custom"))
     (assert-equal '("custom") (getf (aref envs 0) :supports))))
 
+(deftest session-capabilities-carries-protocol-version
+  (with-collector (envs)
+    (kernel-events:emit-capabilities)
+    (let ((e (aref envs 0)))
+      (assert-equal "1" (getf e :protocol_version)
+                    "envelope grammar version should be the v1 string")
+      (assert-equal kernel-events:*protocol-version*
+                    (getf e :protocol_version)))))
+
 (deftest session-default-supports-includes-known-features
   (assert-true (member "streaming"
                        kernel-events:*default-capabilities-supports*

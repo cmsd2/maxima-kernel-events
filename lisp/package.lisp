@@ -44,6 +44,7 @@
     #:emit-ready
     #:start-session
     #:*default-capabilities-supports*
+    #:*protocol-version*
     ;; Structured error
     #:emit-error
     #:maxima-error-message
