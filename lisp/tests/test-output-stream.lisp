@@ -254,3 +254,54 @@ gamma" *standard-output*)
     (assert-equal "beta
 "  (getf (aref envs 1) :text))
     (assert-equal "gamma"  (getf (aref envs 2) :text))))
+
+;; ----------------------------------------------------------------
+;; Integration with eval-hooks: output during an eval should carry
+;; the current :eval_id, NIL otherwise.
+
+#+sbcl
+(deftest output-during-eval-carries-eval-id
+  (kernel-events:clear-sinks)
+  (kernel-events:reset-eval-counter)
+  (let ((envs (make-array 0 :adjustable t :fill-pointer 0)))
+    (kernel-events:register-sink (lambda (e) (vector-push-extend e envs)))
+    (unwind-protect
+        (progn
+          (kernel-events:install-output-wrapping)
+          ;; Call the toplevel-eval wrap directly with an orig that
+          ;; emits a line to *standard-output*.  The eval-hooks wrap
+          ;; binds *current-eval-id*; output-stream's per-line emit
+          ;; should snapshot that id.
+          (let ((wrap (kernel-events::make-toplevel-eval-wrap
+                        (lambda (x)
+                          (declare (ignore x))
+                          (format *standard-output* "tagged~%")
+                          (finish-output *standard-output*)
+                          'maxima::$done))))
+            (funcall wrap 1)))
+      (kernel-events:uninstall-output-wrapping)
+      (kernel-events:clear-sinks))
+    (let* ((output (loop for e across envs
+                         when (eq (getf e :type) :output)
+                         collect e))
+           (begin (loop for e across envs
+                        when (eq (getf e :type) :eval_begin)
+                        return e)))
+      (assert-equal 1 (length output)
+                    "expected exactly one :output envelope during eval")
+      (assert-true (stringp (getf begin :eval_id))
+                   "eval_begin should have an eval_id")
+      (assert-equal (getf begin :eval_id) (getf (first output) :eval_id)
+                    "the :output envelope should carry the eval's id"))))
+
+#+sbcl
+(deftest output-outside-eval-has-nil-eval-id
+  (with-wrapped-output (envs)
+    (format *standard-output* "untagged~%")
+    (kernel-events:uninstall-output-wrapping)
+    (let ((outputs (loop for e across envs
+                         when (eq (getf e :type) :output)
+                         collect e)))
+      (assert-equal 1 (length outputs))
+      (assert-equal nil (getf (first outputs) :eval_id)
+                    "no enclosing eval -> :eval_id should be NIL"))))

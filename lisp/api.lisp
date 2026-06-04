@@ -184,3 +184,76 @@
    package is loaded.  Mirrors Python's `from __future__ import ...'
    idiom for libraries that want to conditionally opt in."
   t)
+
+;;; --- Session handshake ------------------------------------------------
+
+(defun kernel-events::maxima-list-to-string-list (lst what)
+  "Coerce a Maxima list ((mlist) s1 s2 ...) into a Lisp list of
+   strings, mreoring on any non-string item.  WHAT names the
+   function arg for the error message."
+  (cond
+    ((null lst) nil)
+    ((kernel-events::mlistp lst)
+     (mapcar (lambda (x)
+               (unless (stringp x)
+                 (merror "kernel-events: ~A entries must be strings; got: ~M"
+                         what x))
+               x)
+             (cdr lst)))
+    (t
+     (merror "kernel-events: ~A must be a list; got: ~M" what lst))))
+
+(defmfun $emit_capabilities (&optional packages)
+  "emit_capabilities([packages]) -- announce kernel version, lisp
+   implementation, and supported features at session start.
+   PACKAGES is an optional Maxima list of strings naming packages
+   the host wants to advertise.  Returns 'done."
+  (kernel-events:emit-capabilities
+    :packages (kernel-events::maxima-list-to-string-list packages "packages"))
+  '$done)
+
+(defmfun $emit_ready ()
+  "emit_ready() -- signal the kernel is ready to accept the next
+   evaluation.  Returns 'done."
+  (kernel-events:emit-ready)
+  '$done)
+
+(defmfun $start_session (&optional packages)
+  "start_session([packages]) -- emit capabilities then ready.
+   Standard session-start handshake.  Returns 'done."
+  (kernel-events:start-session
+    :packages (kernel-events::maxima-list-to-string-list packages "packages"))
+  '$done)
+
+;;; --- Structured error -------------------------------------------------
+
+(defmfun $emit_error (kind message)
+  "emit_error(kind, message) -- emit a structured error envelope.
+   KIND is one of 'maxima_error, 'lisp_error, 'parser_error,
+   'timeout, 'cancelled.  MESSAGE is a string.  Returns 'done."
+  (unless (stringp message)
+    (merror "kernel-events: emit_error message must be a string; got: ~M" message))
+  (kernel-events:emit-error
+    (kernel-events::maxima-symbol-to-keyword kind)
+    message)
+  '$done)
+
+;;; --- Vars snapshot ----------------------------------------------------
+
+(defmfun $emit_vars ()
+  "emit_vars() -- snapshot $values into a vars envelope.  Returns 'done."
+  (kernel-events:emit-vars)
+  '$done)
+
+;;; --- stdin request ----------------------------------------------------
+
+(defmfun $emit_stdin_request (prompt kind)
+  "emit_stdin_request(prompt, kind) -- announce the kernel is
+   blocking on user input.  KIND is one of 'string, 'expression,
+   'debugger_command.  Returns the request id string so the caller
+   can correlate the eventual response."
+  (unless (stringp prompt)
+    (merror "kernel-events: emit_stdin_request prompt must be a string; got: ~M" prompt))
+  (kernel-events:emit-stdin-request
+    prompt
+    (kernel-events::maxima-symbol-to-keyword kind)))

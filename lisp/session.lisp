@@ -54,3 +54,14 @@
   "Emit a ready envelope signalling the kernel is ready to accept
    the next evaluation."
   (emit-envelope (make-envelope :ready)))
+
+(defun start-session (&key packages supports kernel-version lisp)
+  "Emit capabilities then ready in sequence.  Convenience for hosts
+   that want the standard session-start handshake; equivalent to
+   calling emit-capabilities and emit-ready directly."
+  (apply #'emit-capabilities
+         (append (when packages       (list :packages packages))
+                 (when supports       (list :supports supports))
+                 (when kernel-version (list :kernel-version kernel-version))
+                 (when lisp           (list :lisp lisp))))
+  (emit-ready))

@@ -338,3 +338,102 @@
         (assert-true (search "\"type\":\"frame\"" json))
         (assert-true (search "\"t\":0.05" json))
         (assert-true (search "\"y\":[1.0,0.02]" json))))))
+
+;; ----------------------------------------------------------------
+;; Session handshake: $emit_capabilities, $emit_ready, $start_session
+
+(deftest api-emit-capabilities-no-args
+  (with-clean-api-state
+    (multiple-value-bind (envs _token) (collect)
+      (declare (ignore _token))
+      (maxima::$emit_capabilities)
+      (assert-equal 1 (length envs))
+      (assert-equal :capabilities (getf (aref envs 0) :type))
+      (assert-equal '() (getf (aref envs 0) :packages)))))
+
+(deftest api-emit-capabilities-with-packages
+  (with-clean-api-state
+    (multiple-value-bind (envs _token) (collect)
+      (declare (ignore _token))
+      (maxima::$emit_capabilities (mklist "ax-plots" "sundials"))
+      (assert-equal '("ax-plots" "sundials")
+                    (getf (aref envs 0) :packages)))))
+
+(deftest api-emit-capabilities-non-string-package-errors
+  (with-clean-api-state
+    (collect)
+    (assert-signals 'error
+                    (lambda ()
+                      (maxima::$emit_capabilities (mklist 42))))))
+
+(deftest api-emit-ready-shape
+  (with-clean-api-state
+    (multiple-value-bind (envs _token) (collect)
+      (declare (ignore _token))
+      (maxima::$emit_ready)
+      (assert-equal 1 (length envs))
+      (assert-equal :ready (getf (aref envs 0) :type)))))
+
+(deftest api-start-session-emits-capabilities-then-ready
+  (with-clean-api-state
+    (multiple-value-bind (envs _token) (collect)
+      (declare (ignore _token))
+      (maxima::$start_session)
+      (assert-equal 2 (length envs))
+      (assert-equal :capabilities (getf (aref envs 0) :type))
+      (assert-equal :ready        (getf (aref envs 1) :type)))))
+
+;; ----------------------------------------------------------------
+;; $emit_error
+
+(deftest api-emit-error-shape
+  (with-clean-api-state
+    (multiple-value-bind (envs _token) (collect)
+      (declare (ignore _token))
+      (maxima::$emit_error 'maxima::$maxima_error "div by 0")
+      (let ((e (aref envs 0)))
+        (assert-equal :error (getf e :type))
+        (assert-equal :maxima_error (getf e :kind))
+        (assert-equal "div by 0" (getf e :message))))))
+
+(deftest api-emit-error-non-string-message-errors
+  (with-clean-api-state
+    (collect)
+    (assert-signals 'error
+                    (lambda ()
+                      (maxima::$emit_error 'maxima::$lisp_error 42)))))
+
+;; ----------------------------------------------------------------
+;; $emit_vars
+
+(deftest api-emit-vars-snapshots-current-values
+  (with-clean-api-state
+    (multiple-value-bind (envs _token) (collect)
+      (declare (ignore _token))
+      (let ((maxima::$values (list (list 'maxima::mlist))))
+        (maxima::$emit_vars)
+        (let ((e (aref envs 0)))
+          (assert-equal :vars (getf e :type))
+          (assert-equal 0 (length (getf e :vars))))))))
+
+;; ----------------------------------------------------------------
+;; $emit_stdin_request
+
+(deftest api-emit-stdin-request-shape
+  (with-clean-api-state
+    (kernel-events:reset-stdin-counter)
+    (multiple-value-bind (envs _token) (collect)
+      (declare (ignore _token))
+      (let ((id (maxima::$emit_stdin_request "Enter: " 'maxima::$string)))
+        (assert-equal "r_1" id)
+        (let ((e (aref envs 0)))
+          (assert-equal :stdin_request (getf e :type))
+          (assert-equal "Enter: " (getf e :prompt))
+          (assert-equal :string (getf e :kind)))))))
+
+(deftest api-emit-stdin-request-non-string-prompt-errors
+  (with-clean-api-state
+    (collect)
+    (assert-signals 'error
+                    (lambda ()
+                      (maxima::$emit_stdin_request 42 'maxima::$string)))))

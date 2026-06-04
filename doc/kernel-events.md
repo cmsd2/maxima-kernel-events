@@ -84,9 +84,47 @@ Feature-detect. Returns @code{true} if the package is loaded — mirrors
 Python's `from __future__ import …` idiom for libraries that want to
 conditionally opt in.
 
+### Function: emit_capabilities ([@var{packages}])
+
+Emit a `capabilities` envelope announcing kernel version, lisp
+implementation, and supported features. @var{packages} is an optional
+Maxima list of strings naming packages the host wants to advertise.
+
+### Function: emit_ready ()
+
+Emit a `ready` envelope signalling the kernel will accept the next
+evaluation.
+
+### Function: start_session ([@var{packages}])
+
+Convenience: emit `capabilities` then `ready` in sequence — the
+standard session-start handshake. @var{packages} is forwarded to
+@code{emit_capabilities}.
+
+### Function: emit_error (@var{kind}, @var{message})
+
+Emit a structured `error` envelope. @var{kind} is one of the symbols
+@code{maxima_error}, @code{lisp_error}, @code{parser_error},
+@code{timeout}, @code{cancelled}. @var{message} is a string. The
+package auto-emits this envelope for eval-time failures; call
+@code{emit_error} explicitly only for cases the kernel doesn't catch
+(host-side timeouts, custom parser layers, …).
+
+### Function: emit_vars ()
+
+Snapshot @code{values} and emit a `vars` envelope carrying parallel
+arrays of variable names and their mgrind-rendered values.
+
+### Function: emit_stdin_request (@var{prompt}, @var{kind})
+
+Announce the kernel is blocking on user input. @var{prompt} is the
+text to display in the host UI. @var{kind} is one of the symbols
+@code{string}, @code{expression}, @code{debugger_command}. Returns
+the request id string so the caller can correlate the eventual
+response (delivered out-of-band — the events channel is one-way).
+
 ## See also
 
 - `doc/design/kernel-events.md` — full envelope catalogue and design
-- `doc/design/streaming.md` — streaming-specific envelopes and SUNDIALS PoC
-- `doc/design/animate.md` — paradigm-2 animation (independent path)
-- `doc/design/reactive-views.md` — north-star architecture
+- `doc/design/streaming.md` — streaming-specific envelopes and PoC
+- `schemas/envelopes/v1/` — JSON Schema for each envelope type

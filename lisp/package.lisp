@@ -42,6 +42,7 @@
     ;; Session
     #:emit-capabilities
     #:emit-ready
+    #:start-session
     #:*default-capabilities-supports*
     ;; Structured error
     #:emit-error
