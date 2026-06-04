@@ -21,8 +21,16 @@
     #:emit-envelope
     #:envelope-to-json
     #:json-escape-string
-    ;; Lifecycle queries (host-side)
+    ;; Eval lifecycle
     #:current-eval-id
+    #:next-eval-id
+    #:reset-eval-counter
+    #:emit-eval-begin
+    #:emit-eval-result
+    #:emit-eval-end
+    #:install-eval-hooks
+    #:uninstall-eval-hooks
+    #:eval-hooks-installed-p
     ;; Cancellation
     #:request-cancel
     #:cancel-requested-p

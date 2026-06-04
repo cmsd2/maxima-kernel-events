@@ -41,3 +41,6 @@ true;
 
 (load("lisp/tests/test-output-stream.lisp"), true);
 true;
+
+(load("lisp/tests/test-eval-hooks.lisp"), true);
+true;

@@ -5,11 +5,7 @@
 
 (in-package :kernel-events-tests)
 
-(defmacro with-clean-sinks (&body body)
-  `(unwind-protect (progn
-                     (kernel-events:clear-sinks)
-                     ,@body)
-     (kernel-events:clear-sinks)))
+;; with-clean-sinks is defined in test-sink.lisp, which loads first.
 
 ;; ----------------------------------------------------------------
 ;; Basic routing
