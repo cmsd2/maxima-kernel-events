@@ -11,6 +11,10 @@
 
 (in-package :kernel-events)
 
+;; *current-eval-id* is defined in eval-hooks.lisp, which loads
+;; after this file.  Declaim special so the compiler doesn't warn.
+(declaim (special *current-eval-id*))
+
 (defvar *stdin-request-counter* 0
   "Monotonic allocator for stdin request ids, session-scoped.")
 

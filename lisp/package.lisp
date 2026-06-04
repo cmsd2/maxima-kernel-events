@@ -55,6 +55,9 @@
     #:emit-stdin-request
     #:next-stdin-request-id
     #:reset-stdin-counter
+    #:install-stdin-hooks
+    #:uninstall-stdin-hooks
+    #:stdin-hooks-installed-p
     ;; Vars snapshot
     #:emit-vars
     #:current-vars-snapshot

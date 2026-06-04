@@ -57,5 +57,8 @@ true;
 (load("lisp/tests/test-stdin.lisp"), true);
 true;
 
+(load("lisp/tests/test-stdin-hooks.lisp"), true);
+true;
+
 (load("lisp/tests/test-vars.lisp"), true);
 true;

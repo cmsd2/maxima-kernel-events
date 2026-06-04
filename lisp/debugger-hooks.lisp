@@ -22,6 +22,10 @@
 
 (in-package :kernel-events)
 
+;; *current-eval-id* is defined in eval-hooks.lisp, which loads
+;; after this file.  Declaim special so the compiler doesn't warn.
+(declaim (special *current-eval-id*))
+
 (defvar *current-debug-depth* 0
   "Current debugger nesting level.  Incremented on debug_enter,
    decremented on debug_leave.  Matches the N in (dbm:N>.")

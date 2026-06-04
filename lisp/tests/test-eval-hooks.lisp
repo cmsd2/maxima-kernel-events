@@ -157,11 +157,12 @@
   (with-installed-eval-hooks (envs)
     (let ((kernel-events::*next-eval-suppressed* nil))
       (maxima::toplevel-macsyma-eval 42))
-    ;; Expect: eval_begin, eval_result, eval_end (in that order)
-    (assert-equal 3 (length envs))
+    ;; Expect: eval_begin, eval_result, eval_end, ready
+    (assert-equal 4 (length envs))
     (assert-equal :eval_begin  (getf (aref envs 0) :type))
     (assert-equal :eval_result (getf (aref envs 1) :type))
     (assert-equal :eval_end    (getf (aref envs 2) :type))
+    (assert-equal :ready       (getf (aref envs 3) :type))
     ;; Same eval_id throughout
     (let ((id (getf (aref envs 0) :eval_id)))
       (assert-equal id (getf (aref envs 1) :eval_id))
@@ -178,15 +179,25 @@
     ;; eval_end status :ok
     (assert-equal :ok (getf (aref envs 2) :status))))
 
+(deftest eval-hooks-ready-fires-after-eval-end
+  ;; The toplevel-eval wrap auto-emits a `ready' envelope after the
+  ;; closing eval_end so hosts have an explicit "REPL is at the
+  ;; prompt" signal without prompt-pattern matching.
+  (with-installed-eval-hooks (envs)
+    (maxima::toplevel-macsyma-eval 1)
+    (let ((last (aref envs (1- (length envs)))))
+      (assert-equal :ready (getf last :type)))))
+
 (deftest eval-hooks-suppressed-emits-suppressed-result
   (with-installed-eval-hooks (envs)
     ;; Simulate dbm-read having captured `$'-terminated input.
     (let ((kernel-events::*next-eval-suppressed* t))
       (maxima::toplevel-macsyma-eval 42))
-    (assert-equal 3 (length envs))
+    (assert-equal 4 (length envs))
     (assert-equal :eval_begin  (getf (aref envs 0) :type))
     (assert-equal :eval_result (getf (aref envs 1) :type))
     (assert-equal :eval_end    (getf (aref envs 2) :type))
+    (assert-equal :ready       (getf (aref envs 3) :type))
     (assert-equal t (getf (aref envs 1) :suppressed))
     (let ((bundle (getf (aref envs 1) :mime_bundle)))
       (assert-equal "42" (gethash "text/plain" bundle)))))

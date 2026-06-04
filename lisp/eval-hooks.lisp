@@ -168,13 +168,19 @@
 (defun make-dbm-read-wrap (orig)
   "Build the dbm-read replacement closure.
 
-   Two responsibilities:
+   Three responsibilities:
 
-   1. On a successful read, capture the suppression flag from the
+   1. When called from inside a Maxima dbm session (depth > 0),
+      emit a stdin_request envelope with kind = :debugger_command
+      so the host knows the kernel is blocking for a dbm command.
+      At depth 0 (top-level REPL) no stdin_request fires — hosts
+      treat the `ready' envelope as the prompt signal.
+
+   2. On a successful read, capture the suppression flag from the
       parsed form's header into *next-eval-suppressed*.  Pure
       observation; the form is returned unchanged.
 
-   2. On a *parse* failure, emit an `error' envelope with
+   3. On a *parse* failure, emit an `error' envelope with
       kind = :parser_error.  Two failure shapes are handled, in
       symmetry with the toplevel-eval wrap:
 
@@ -189,6 +195,10 @@
 
    Parser errors have :eval_id NIL because no eval has started yet."
   (lambda (&rest args)
+    (when (plusp *current-debug-depth*)
+      (emit-stdin-request
+        (format nil "(dbm:~D) " *current-debug-depth*)
+        :debugger_command))
     (handler-bind
         ((error
            (lambda (cnd)
@@ -300,5 +310,6 @@
                               :label      (current-output-label-string)
                               :suppressed suppressed))
           (emit-eval-end eval-id status
-                         :duration-ms (duration-ms start)))
+                         :duration-ms (duration-ms start))
+          (emit-ready))
         result))))

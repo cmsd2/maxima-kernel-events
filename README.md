@@ -30,17 +30,20 @@ What's implemented today:
 | Debugger hooks         | done        | wraps `*debugger-hook*` + `break-dbm-loop` |
 | Session handshake      | done        | `emit-capabilities`, `emit-ready`      |
 | Structured error event | done        | `emit-error` with `kind`/`message`/…   |
-| stdin request          | done        | `emit-stdin-request`, id allocator     |
+| stdin request          | done        | emitter + `$readonly` wrap + dbm-prompt|
 | Vars snapshot          | done        | `emit-vars`, snapshots `$values`       |
 | Streaming envelopes    | done        | `stream_begin`/`frame`/`progress`/…    |
 | Maxima-callable API    | done        | `$show`, `$emit_display`, `$emit_frame`, … |
 | Envelope schemas       | done (v1)   | `schemas/envelopes/v1/`                |
 
 Wired into Maxima today: eval-hooks (including auto-emission of
-`error` envelopes for the four eval-time failure modes plus
-`parser_error` from the `dbm-read` wrap), debugger-hooks, and
-the output-stream wrap. The session / stdin / vars emitters are
-call-sites hosts opt into — not auto-fired by the kernel.
+`error` envelopes for the four eval-time failure modes,
+`parser_error` from the `dbm-read` wrap, and `ready` after each
+`eval_end`), debugger-hooks, the output-stream wrap, and the
+`$readonly` wrap (with `dbm-read` also emitting `stdin_request`
+when in a dbm session). The session / vars emitters and direct
+`emit-error` calls are call-sites hosts opt into — not auto-fired
+by the kernel.
 
 ## Design
 
