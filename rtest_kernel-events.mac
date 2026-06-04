@@ -44,3 +44,6 @@ true;
 
 (load("lisp/tests/test-eval-hooks.lisp"), true);
 true;
+
+(load("lisp/tests/test-debugger-hooks.lisp"), true);
+true;

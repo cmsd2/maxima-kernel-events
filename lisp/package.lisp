@@ -31,6 +31,14 @@
     #:install-eval-hooks
     #:uninstall-eval-hooks
     #:eval-hooks-installed-p
+    ;; Debugger
+    #:install-debugger-hooks
+    #:uninstall-debugger-hooks
+    #:debugger-hooks-installed-p
+    #:emit-debug-enter
+    #:emit-debug-leave
+    #:reset-debug-depth
+    #:*current-debug-depth*
     ;; Cancellation
     #:request-cancel
     #:cancel-requested-p
