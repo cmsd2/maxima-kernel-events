@@ -60,5 +60,8 @@ true;
 (load("lisp/tests/test-stdin-hooks.lisp"), true);
 true;
 
+(load("lisp/tests/test-queue-input-stream.lisp"), true);
+true;
+
 (load("lisp/tests/test-vars.lisp"), true);
 true;

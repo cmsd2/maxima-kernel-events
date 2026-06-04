@@ -15,7 +15,13 @@
     #:unregister-sink
     #:list-sinks
     #:clear-sinks
+    #:with-collecting-sink
+    #:collect-envelopes
     #:*debug-sinks*
+    ;; Queue-backed input stream (embedder helper)
+    #:make-queue-input-stream
+    #:push-queue-input
+    #:close-queue-input
     ;; Envelope construction + emission
     #:make-envelope
     #:emit-envelope

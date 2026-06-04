@@ -201,3 +201,55 @@
   (with-clean-sinks
     (assert-signals 'error
                     (lambda () (kernel-events:register-sink nil)))))
+
+;; ----------------------------------------------------------------
+;; with-collecting-sink
+
+(deftest sink-with-collecting-sink-collects-envelopes
+  (with-clean-sinks
+    (kernel-events:with-collecting-sink (envs)
+      (kernel-events:emit-envelope (kernel-events:make-envelope :one))
+      (kernel-events:emit-envelope (kernel-events:make-envelope :two))
+      (assert-equal 2 (length envs))
+      (assert-equal :one (getf (aref envs 0) :type))
+      (assert-equal :two (getf (aref envs 1) :type)))))
+
+(deftest sink-with-collecting-sink-unregisters-on-normal-exit
+  (with-clean-sinks
+    (let ((before (length (kernel-events:list-sinks))))
+      (kernel-events:with-collecting-sink (envs)
+        (assert-equal (1+ before) (length (kernel-events:list-sinks))))
+      (assert-equal before (length (kernel-events:list-sinks))
+                    "sink should be unregistered after the body exits"))))
+
+(deftest sink-with-collecting-sink-unregisters-on-non-local-exit
+  (with-clean-sinks
+    (let ((before (length (kernel-events:list-sinks))))
+      (catch 'test-tag
+        (kernel-events:with-collecting-sink (envs)
+          (throw 'test-tag nil)))
+      (assert-equal before (length (kernel-events:list-sinks))
+                    "sink should be unregistered after a non-local exit"))))
+
+(deftest sink-with-collecting-sink-coexists-with-other-sinks
+  (with-clean-sinks
+    (let ((other-count 0))
+      (kernel-events:register-sink
+        (lambda (e) (declare (ignore e)) (incf other-count)))
+      (kernel-events:with-collecting-sink (envs)
+        (kernel-events:emit-envelope (kernel-events:make-envelope :x))
+        (assert-equal 1 (length envs))
+        (assert-equal 1 other-count
+                      "the other sink should also have received the envelope")))))
+
+(deftest sink-collect-envelopes-thunk-form
+  (with-clean-sinks
+    (let ((envs (kernel-events:collect-envelopes
+                  (lambda ()
+                    (kernel-events:emit-envelope
+                      (kernel-events:make-envelope :tick))
+                    (kernel-events:emit-envelope
+                      (kernel-events:make-envelope :tock))))))
+      (assert-equal 2 (length envs))
+      (assert-equal :tick (getf (aref envs 0) :type))
+      (assert-equal :tock (getf (aref envs 1) :type)))))

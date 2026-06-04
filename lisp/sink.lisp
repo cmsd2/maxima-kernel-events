@@ -82,3 +82,41 @@
           (format *trace-output*
                   "~&[kernel-events] sink ~s error: ~a~%" sink e))
         nil))))
+
+;;; --- Scoped collecting sink --------------------------------------------
+
+(defmacro with-collecting-sink ((envelopes-var) &body body)
+  "Register a sink for the dynamic extent of BODY that pushes every
+   emitted envelope into a fresh fill-pointer'd vector bound to
+   ENVELOPES-VAR.  Unregisters on exit.
+
+   Thread-safe: pushes are guarded by a private mutex (on SBCL) so
+   concurrent emitters can fan into the same collector.
+
+   This is the building block for embedding hosts that want
+   per-request envelope collection — register before submitting an
+   eval, harvest after the eval_end."
+  (let ((lock-sym  (gensym "LOCK"))
+        (token-sym (gensym "TOKEN")))
+    `(let ((,envelopes-var (make-array 0 :adjustable t :fill-pointer 0))
+           (,lock-sym
+             #+sbcl (sb-thread:make-mutex :name "collecting-sink")
+             #-sbcl nil))
+       (declare (ignorable ,envelopes-var ,lock-sym))
+       (let ((,token-sym
+               (register-sink
+                 (lambda (e)
+                   #+sbcl (sb-thread:with-mutex (,lock-sym)
+                            (vector-push-extend e ,envelopes-var))
+                   #-sbcl (vector-push-extend e ,envelopes-var)))))
+         (unwind-protect (progn ,@body)
+           (unregister-sink ,token-sym))))))
+
+(defun collect-envelopes (thunk)
+  "Call THUNK with no arguments under a collecting sink and return
+   the vector of envelopes that emerged.  Functional equivalent of
+   the with-collecting-sink macro for callers that prefer a
+   higher-order form."
+  (with-collecting-sink (envelopes)
+    (funcall thunk)
+    envelopes))

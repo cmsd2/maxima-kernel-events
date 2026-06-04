@@ -35,6 +35,7 @@ What's implemented today:
 | Streaming envelopes    | done        | `stream_begin`/`frame`/`progress`/…    |
 | Maxima-callable API    | done        | `$show`, `$emit_display`, `$emit_frame`, … |
 | Envelope schemas       | done (v1)   | `schemas/envelopes/v1/`                |
+| Embedder helpers       | done        | `with-collecting-sink`, `queue-input-stream` |
 
 Wired into Maxima today: eval-hooks (including auto-emission of
 `error` envelopes for the four eval-time failure modes,
