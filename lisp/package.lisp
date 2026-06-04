@@ -45,6 +45,11 @@
     #:mime-bundle-mimes
     #:mime-bundle-empty-p
     #:build-mime-bundle
+    ;; Output stream wrapping
+    #:install-output-wrapping
+    #:uninstall-output-wrapping
+    #:output-wrapping-installed-p
+    #:emit-output-line
     ;; Streaming envelopes
     #:next-view-id
     #:next-view-seq

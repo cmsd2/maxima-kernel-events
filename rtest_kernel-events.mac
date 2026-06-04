@@ -38,3 +38,6 @@ true;
 
 (load("lisp/tests/test-api.lisp"), true);
 true;
+
+(load("lisp/tests/test-output-stream.lisp"), true);
+true;
