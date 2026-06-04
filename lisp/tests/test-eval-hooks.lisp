@@ -221,6 +221,53 @@
            (wrapped (kernel-events::make-dbm-read-wrap orig)))
       (assert-equal fake-read-result (funcall wrapped)))))
 
+(deftest eval-hooks-dbm-read-wrap-maxima-error-emits-parser-error
+  ;; Parser error path A: orig signals maxima-$error.  The wrap
+  ;; should emit `:parser_error' and let the condition propagate.
+  (with-installed-eval-hooks (envs)
+    (let ((maxima::$error (list (list 'maxima::mlist) "syntax: unexpected token"))
+          (orig (lambda (&rest args)
+                  (declare (ignore args))
+                  (error 'maxima::maxima-$error))))
+      (let ((wrap (kernel-events::make-dbm-read-wrap orig)))
+        (handler-case (funcall wrap)
+          (maxima::maxima-$error () nil)
+          (error () nil))))
+    (let ((errs (envs-of-type envs :error)))
+      (assert-equal 1 (length errs))
+      (assert-equal :parser_error (getf (first errs) :kind))
+      (assert-equal "syntax: unexpected token"
+                    (getf (first errs) :message))
+      (assert-equal nil (getf (first errs) :eval_id)
+                    "parser errors fire pre-eval, eval_id should be NIL"))))
+
+(deftest eval-hooks-dbm-read-wrap-throw-emits-parser-error
+  ;; Parser error path B: orig throws macsyma-quit (the merror
+  ;; default).  Wrap catches, emits :parser_error, re-throws so the
+  ;; continue loop's outer recovery still works.
+  (with-installed-eval-hooks (envs)
+    (let ((maxima::$error (list (list 'maxima::mlist) "bad input"))
+          (orig (lambda (&rest args)
+                  (declare (ignore args))
+                  (throw 'maxima::macsyma-quit 'maxima::maxima-error))))
+      (let ((wrap (kernel-events::make-dbm-read-wrap orig)))
+        (catch 'maxima::macsyma-quit (funcall wrap))))
+    (let ((errs (envs-of-type envs :error)))
+      (assert-equal 1 (length errs))
+      (assert-equal :parser_error (getf (first errs) :kind))
+      (assert-equal "bad input" (getf (first errs) :message))
+      (assert-equal nil (getf (first errs) :eval_id)))))
+
+(deftest eval-hooks-dbm-read-wrap-happy-path-emits-no-error
+  ;; Sanity: a normal successful read produces no error envelope.
+  (with-installed-eval-hooks (envs)
+    (let ((orig (lambda (&rest args)
+                  (declare (ignore args))
+                  `((maxima::displayinput) nil 1))))
+      (let ((wrap (kernel-events::make-dbm-read-wrap orig)))
+        (funcall wrap)))
+    (assert-equal 0 (length (envs-of-type envs :error)))))
+
 ;; ----------------------------------------------------------------
 ;; Error path
 ;;

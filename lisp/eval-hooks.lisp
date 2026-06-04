@@ -166,18 +166,67 @@
 ;;; --- Wrapper closures --------------------------------------------------
 
 (defun make-dbm-read-wrap (orig)
-  "Build the dbm-read replacement closure.  Calls ORIG, captures the
-   suppression flag from the resulting form into *next-eval-
-   suppressed*, returns the form unchanged."
+  "Build the dbm-read replacement closure.
+
+   Two responsibilities:
+
+   1. On a successful read, capture the suppression flag from the
+      parsed form's header into *next-eval-suppressed*.  Pure
+      observation; the form is returned unchanged.
+
+   2. On a *parse* failure, emit an `error' envelope with
+      kind = :parser_error.  Two failure shapes are handled, in
+      symmetry with the toplevel-eval wrap:
+
+        - cl:error signalled out of ORIG (uncommon — most parser
+          errors go through merror, which throws):
+          handler-bind observes, emits, declines.  The condition
+          keeps propagating to the continue loop's recovery.
+
+        - throw 'macsyma-quit out of ORIG (the merror default):
+          catch snapshots maxima::$error, emits :parser_error, then
+          re-throws so the outer catch still sees the abort.
+
+   Parser errors have :eval_id NIL because no eval has started yet."
   (lambda (&rest args)
-    (let ((r (apply orig args)))
-      (when (and (consp r) (consp (car r)))
-        ;; `r' is `((displayinput) c-tag expr)' for `;'-terminated
-        ;; input — the header SYMBOL is `displayinput' in the
-        ;; :maxima package.  Anything else, treat as suppressed.
-        (setf *next-eval-suppressed*
-              (not (eq (caar r) 'maxima::displayinput))))
-      r)))
+    (handler-bind
+        ((error
+           (lambda (cnd)
+             ;; Cancellation during a read is unusual but the host
+             ;; might trigger it; do not relabel as a parse error.
+             (unless (typep cnd 'cancellation-requested)
+               (typecase cnd
+                 (maxima::maxima-$error
+                  (emit-error :parser_error
+                              (or (maxima-error-message)
+                                  (condition-message cnd))))
+                 (t
+                  (emit-error :parser_error
+                              (condition-message cnd)
+                              :condition-type
+                              (string (type-of cnd)))))))))
+      (let ((completed   nil)
+            (form-result nil)
+            (throw-val   nil))
+        (setf throw-val
+              (catch 'maxima::macsyma-quit
+                (let ((r (apply orig args)))
+                  (when (and (consp r) (consp (car r)))
+                    ;; `r' is `((displayinput) c-tag expr)' for
+                    ;; `;'-terminated input — header SYMBOL is
+                    ;; `displayinput' in :maxima.  Anything else,
+                    ;; treat as suppressed.
+                    (setf *next-eval-suppressed*
+                          (not (eq (caar r) 'maxima::displayinput))))
+                  (setf form-result r)
+                  (setf completed t)
+                  :ok)))
+        (if completed
+            form-result
+            (progn
+              (emit-error :parser_error
+                          (or (maxima-error-message) "Parse error"))
+              (throw 'maxima::macsyma-quit throw-val)))))))
 
 (defun make-toplevel-eval-wrap (orig)
   "Build the toplevel-macsyma-eval replacement closure that wraps

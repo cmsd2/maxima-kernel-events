@@ -36,9 +36,11 @@ What's implemented today:
 | Maxima-callable API    | done        | `$show`, `$emit_display`, `$emit_frame`, … |
 | Envelope schemas       | done (v1)   | `schemas/envelopes/v1/`                |
 
-Wired into Maxima today: eval-hooks, debugger-hooks, output-stream
-wrap. The session / error / stdin / vars emitters are call-sites
-hosts opt into — they aren't auto-fired by the kernel.
+Wired into Maxima today: eval-hooks (including auto-emission of
+`error` envelopes for the four eval-time failure modes plus
+`parser_error` from the `dbm-read` wrap), debugger-hooks, and
+the output-stream wrap. The session / stdin / vars emitters are
+call-sites hosts opt into — not auto-fired by the kernel.
 
 ## Design
 
