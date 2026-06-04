@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/error.json",
+  "title": "error",
+  "description": "Structured error event. Carries WHAT failed (kind + message + optional location/form/backtrace), distinct from eval_end which only carries THAT something failed. A single evaluation may emit zero or more error envelopes before its eval_end.",
+  "type": "object",
+  "required": ["type", "kind", "message"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "error" },
+    "eval_id": { "$ref": "common.json#/$defs/eval_id" },
+    "kind": {
+      "description": "Error class. maxima_error = merror call; lisp_error = unhandled Lisp condition; parser_error = lex/parse failure pre-evaluation; timeout / cancelled = lifecycle outcomes.",
+      "type": "string",
+      "enum": ["maxima_error", "lisp_error", "parser_error", "timeout", "cancelled"]
+    },
+    "message": {
+      "type": "string"
+    },
+    "location": {
+      "description": "Optional source location.",
+      "type": ["object", "null"],
+      "properties": {
+        "line":   { "type": "integer", "minimum": 1 },
+        "column": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "form": {
+      "description": "Optional offending source form as a string.",
+      "type": ["string", "null"]
+    },
+    "backtrace": {
+      "description": "Optional stack-frame strings, outermost first.",
+      "type": ["array", "null"],
+      "items": { "type": "string" }
+    },
+    "recoverable": {
+      "description": "True when the error is non-fatal (evaluation may continue). Encoded as JSON null when unspecified; false is the kernel default.",
+      "type": ["boolean", "null"]
+    }
+  }
+}

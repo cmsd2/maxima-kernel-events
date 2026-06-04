@@ -47,3 +47,15 @@ true;
 
 (load("lisp/tests/test-debugger-hooks.lisp"), true);
 true;
+
+(load("lisp/tests/test-session.lisp"), true);
+true;
+
+(load("lisp/tests/test-error-event.lisp"), true);
+true;
+
+(load("lisp/tests/test-stdin.lisp"), true);
+true;
+
+(load("lisp/tests/test-vars.lisp"), true);
+true;

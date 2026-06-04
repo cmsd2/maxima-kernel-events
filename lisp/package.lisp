@@ -39,6 +39,19 @@
     #:emit-debug-leave
     #:reset-debug-depth
     #:*current-debug-depth*
+    ;; Session
+    #:emit-capabilities
+    #:emit-ready
+    #:*default-capabilities-supports*
+    ;; Structured error
+    #:emit-error
+    ;; stdin requests
+    #:emit-stdin-request
+    #:next-stdin-request-id
+    #:reset-stdin-counter
+    ;; Vars snapshot
+    #:emit-vars
+    #:current-vars-snapshot
     ;; Cancellation
     #:request-cancel
     #:cancel-requested-p

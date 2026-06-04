@@ -13,13 +13,18 @@ catch protocol drift early.
 
 | File                  | Emitted from              | Discriminator       |
 | --------------------- | ------------------------- | ------------------- |
+| `capabilities.json`   | `session.lisp`            | `"capabilities"`    |
+| `ready.json`          | `session.lisp`            | `"ready"`           |
 | `eval_begin.json`     | `eval-hooks.lisp`         | `"eval_begin"`      |
 | `eval_result.json`    | `eval-hooks.lisp`         | `"eval_result"`     |
 | `eval_end.json`       | `eval-hooks.lisp`         | `"eval_end"`        |
 | `output.json`         | `output-stream.lisp`      | `"output"`          |
 | `display.json`        | `api.lisp` (`$show`, …)   | `"display"`         |
+| `error.json`          | `error-event.lisp`        | `"error"`           |
 | `debug_enter.json`    | `debugger-hooks.lisp`     | `"debug_enter"`     |
 | `debug_leave.json`    | `debugger-hooks.lisp`     | `"debug_leave"`     |
+| `stdin_request.json`  | `stdin.lisp`              | `"stdin_request"`   |
+| `vars.json`           | `vars.lisp`               | `"vars"`            |
 | `stream_begin.json`   | `stream-events.lisp`      | `"stream_begin"`    |
 | `frame.json`          | `stream-events.lisp`      | `"frame"`           |
 | `progress.json`       | `stream-events.lisp`      | `"progress"`        |

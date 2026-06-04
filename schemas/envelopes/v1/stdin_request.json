@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/stdin_request.json",
+  "title": "stdin_request",
+  "description": "Announces the kernel is blocking on user input. The host responds out-of-band (a dedicated stdin channel; the events stream is one-way). request_id allows the host to correlate the eventual response.",
+  "type": "object",
+  "required": ["type", "request_id", "prompt", "kind"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "stdin_request" },
+    "eval_id": { "$ref": "common.json#/$defs/eval_id" },
+    "request_id": {
+      "description": "Session-scoped id matching r_<n>.",
+      "type": "string",
+      "pattern": "^r_[0-9]+$"
+    },
+    "prompt": {
+      "description": "Text to display in the host's input UI.",
+      "type": "string"
+    },
+    "kind": {
+      "description": "What kind of input the kernel wants. string = read_string-style; expression = Maxima expression; debugger_command = dbm prompt.",
+      "type": "string",
+      "enum": ["string", "expression", "debugger_command"]
+    }
+  }
+}

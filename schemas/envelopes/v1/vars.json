@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/vars.json",
+  "title": "vars",
+  "description": "Snapshot of user-assigned Maxima variables (maxima::$values). Emitted on demand — hosts request it; the kernel does not auto-emit per evaluation. vars and values_text are parallel arrays.",
+  "type": "object",
+  "required": ["type", "vars", "values_text"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "vars" },
+    "eval_id": { "$ref": "common.json#/$defs/eval_id" },
+    "vars": {
+      "description": "Variable names with the leading $ stripped.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "values_text": {
+      "description": "Current values rendered to one-line text via mgrind. Parallel to vars.",
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

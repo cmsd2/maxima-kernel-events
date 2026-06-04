@@ -27,6 +27,10 @@ load("lisp/stream-events.lisp")$
 load("lisp/eval-hooks.lisp")$
 load("lisp/output-stream.lisp")$
 load("lisp/debugger-hooks.lisp")$
+load("lisp/session.lisp")$
+load("lisp/error-event.lisp")$
+load("lisp/stdin.lisp")$
+load("lisp/vars.lisp")$
 load("lisp/api.lisp")$
 
 /* Uncomment after running 'mxpm doc build' to enable ? and ?? help lookup */

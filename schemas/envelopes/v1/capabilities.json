@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/cmsd2/maxima-kernel-events/schemas/envelopes/v1/capabilities.json",
+  "title": "capabilities",
+  "description": "Session-startup announcement of kernel versions and supported features. Emitted by the host after registering its sink, before any evaluation. The host follows up with a negotiated render-mime list (see set-render-mimes / *render-mimes*) which the kernel uses to gate expensive MIME bundle production.",
+  "type": "object",
+  "required": ["type", "supports"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "capabilities" },
+    "kernel_version": {
+      "description": "Maxima's *autoconf-version* string. Null if the global isn't bound.",
+      "type": ["string", "null"]
+    },
+    "lisp": {
+      "description": "Lisp implementation and version, e.g. \"SBCL 2.6.3\".",
+      "type": "string"
+    },
+    "packages": {
+      "description": "Maxima packages the host has chosen to advertise. The kernel does not auto-detect; the host knows what it cares about announcing.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "supports": {
+      "description": "Feature flags this kernel-events build provides (e.g. \"streaming\", \"debug_events\", \"cancellation\").",
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
