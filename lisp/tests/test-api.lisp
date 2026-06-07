@@ -349,7 +349,11 @@
       (maxima::$emit_capabilities)
       (assert-equal 1 (length envs))
       (assert-equal :capabilities (getf (aref envs 0) :type))
-      (assert-equal '() (getf (aref envs 0) :packages)))))
+      ;; :packages and :supports are vectors so the JSON encoder
+      ;; emits them as arrays (lists collide with plists).
+      ;; assert-equal uses #'equal, which isn't element-wise on
+      ;; vectors; coerce to list for the structural check.
+      (assert-equal '() (coerce (getf (aref envs 0) :packages) 'list)))))
 
 (deftest api-emit-capabilities-with-packages
   (with-clean-api-state
@@ -357,7 +361,7 @@
       (declare (ignore _token))
       (maxima::$emit_capabilities (mklist "ax-plots" "sundials"))
       (assert-equal '("ax-plots" "sundials")
-                    (getf (aref envs 0) :packages)))))
+                    (coerce (getf (aref envs 0) :packages) 'list)))))
 
 (deftest api-emit-capabilities-non-string-package-errors
   (with-clean-api-state

@@ -30,8 +30,12 @@
                        (stringp (getf e :kernel_version))))
       (assert-true (stringp (getf e :lisp))
                    "lisp implementation string should be set")
-      (assert-equal '() (getf e :packages))
-      (assert-true (listp (getf e :supports))))))
+      ;; :packages and :supports are vectors so the JSON encoder
+      ;; emits them as arrays (cons lists collide with plist).
+      ;; assert-equal uses #'equal which doesn't compare vectors
+      ;; element-wise; coerce to list for the structural check.
+      (assert-equal '() (coerce (getf e :packages) 'list))
+      (assert-true (vectorp (getf e :supports))))))
 
 (deftest session-capabilities-explicit-kernel-version
   (with-collector (envs)
@@ -44,12 +48,14 @@
 (deftest session-capabilities-packages-list
   (with-collector (envs)
     (kernel-events:emit-capabilities :packages '("foo" "bar"))
-    (assert-equal '("foo" "bar") (getf (aref envs 0) :packages))))
+    (assert-equal '("foo" "bar")
+                  (coerce (getf (aref envs 0) :packages) 'list))))
 
 (deftest session-capabilities-supports-overridable
   (with-collector (envs)
     (kernel-events:emit-capabilities :supports '("custom"))
-    (assert-equal '("custom") (getf (aref envs 0) :supports))))
+    (assert-equal '("custom")
+                  (coerce (getf (aref envs 0) :supports) 'list))))
 
 (deftest session-capabilities-carries-protocol-version
   (with-collector (envs)
@@ -61,15 +67,17 @@
                     (getf e :protocol_version)))))
 
 (deftest session-default-supports-includes-known-features
-  (assert-true (member "streaming"
-                       kernel-events:*default-capabilities-supports*
-                       :test #'string=))
-  (assert-true (member "debug_events"
-                       kernel-events:*default-capabilities-supports*
-                       :test #'string=))
-  (assert-true (member "cancellation"
-                       kernel-events:*default-capabilities-supports*
-                       :test #'string=)))
+  ;; *default-capabilities-supports* is a vector, so use find rather
+  ;; than member (which is list-only).
+  (assert-true (find "streaming"
+                     kernel-events:*default-capabilities-supports*
+                     :test #'string=))
+  (assert-true (find "debug_events"
+                     kernel-events:*default-capabilities-supports*
+                     :test #'string=))
+  (assert-true (find "cancellation"
+                     kernel-events:*default-capabilities-supports*
+                     :test #'string=)))
 
 ;; ----------------------------------------------------------------
 ;; ready

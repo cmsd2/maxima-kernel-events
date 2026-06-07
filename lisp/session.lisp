@@ -17,11 +17,13 @@
    v2 schema set would ship alongside *protocol-version* = \"2\".")
 
 (defvar *default-capabilities-supports*
-  '("eval_lifecycle" "output_capture" "structured_errors"
+  #("eval_lifecycle" "output_capture" "structured_errors"
     "debug_events" "streaming" "mime_bundles" "cancellation"
     "stdin_request")
-  "List of capability keys this kernel-events build advertises by
-   default.  Hosts pass :supports to override.")
+  "Capability keys this kernel-events build advertises by default.
+   Stored as a vector because envelope-to-json treats lists as
+   plists; the JSON encoder requires vectors for arrays.  Hosts pass
+   :supports to override.")
 
 (defun maxima-version-string ()
   "Return Maxima's *autoconf-version* as a string, or NIL when the
@@ -54,8 +56,11 @@
                    :kernel_version   (or kernel-version
                                          (maxima-version-string))
                    :lisp             (or lisp (lisp-version-string))
-                   :packages         (or packages '())
-                   :supports         supports)))
+                   ;; Coerce list inputs to vectors so the JSON encoder
+                   ;; emits them as arrays (it treats cons lists as
+                   ;; plists).  An empty list becomes #() → "[]".
+                   :packages         (coerce (or packages #()) 'vector)
+                   :supports         (coerce supports 'vector))))
 
 (defun emit-ready ()
   "Emit a ready envelope signalling the kernel is ready to accept
