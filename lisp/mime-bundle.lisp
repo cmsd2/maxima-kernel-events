@@ -83,17 +83,17 @@
 
 ;;; --- Maxima output helpers ----------------------------------------------
 ;;;
-;;; mgrind takes (form stream) and writes a one-line readable form.
-;;; $tex1 (Maxima-callable, returns a string) is the standard LaTeX
-;;; emitter.  Both live in the :maxima package, loaded by the time
-;;; this file is loaded under Maxima (kernel-events.mac:21+).
+;;; mstring gives the one-line form Maxima's string() returns; mgrind
+;;; would break long forms across lines at linel.  $tex1
+;;; (Maxima-callable, returns a string) is the standard LaTeX emitter.
+;;; Both live in the :maxima package, loaded by the time this file is
+;;; loaded under Maxima (kernel-events.mac:21+).
 
 (defun maxima-grind-to-string (expr)
-  "Produce a one-line readable text form of EXPR via Maxima's
-   mgrind.  Returns the string."
-  (with-output-to-string (out)
-    (let ((maxima::$display2d nil))
-      (maxima::mgrind expr out))))
+  "Produce the one-line text form of EXPR, as Maxima's string()
+   gives it.  Returns the string."
+  (let ((maxima::$lispdisp t))
+    (coerce (maxima::mstring expr) 'string)))
 
 (defun maxima-tex1-to-string (expr)
   "Produce a LaTeX form of EXPR via Maxima's $tex1.  Returns the
@@ -107,7 +107,7 @@
 
 (defun build-mime-bundle (expr)
   "Build a mime bundle for EXPR (a Maxima expression).  Always
-   includes \"text/plain\" via mgrind.  Includes
+   includes \"text/plain\", the one-line form.  Includes
    \"application/x-maxima-latex\" when *render-mimes* contains it
    AND tex1 succeeds.  Library packages can extend the result via
    mime-bundle-add (e.g. ax-plots adding the Plotly JSON for plot
