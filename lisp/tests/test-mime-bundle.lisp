@@ -184,6 +184,19 @@
            (text (kernel-events:mime-bundle-get b "text/plain")))
       (assert-equal "1/2" text))))
 
+;; A form longer than linel stays on one line, as string() writes it
+(deftest build-bundle-long-text-is-one-line
+  (with-default-render-mimes
+    (let* ((sum (cons (list 'maxima::mplus 'maxima::simp)
+                      (loop for i from 1 to 60
+                            collect (list (list 'maxima::mtimes 'maxima::simp)
+                                          (* i 1000003)
+                                          (intern (format nil "$X~D" i) :maxima)))))
+           (text (kernel-events:mime-bundle-get
+                   (kernel-events:build-mime-bundle sum) "text/plain")))
+      (assert-true (> (length text) 200) "the form should be longer than linel")
+      (assert-equal nil (find #\Newline text)))))
+
 (deftest build-bundle-rational-latex-is-fraction-form
   (with-default-render-mimes
     (kernel-events:set-render-mimes '("text/plain"
